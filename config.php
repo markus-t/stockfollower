@@ -4,16 +4,22 @@ header("Content-type: text/html; charset=utf-8");
 session_start();
 
 error_reporting(E_ALL ^ E_STRICT);
-/*error_reporting(E_ALL);*/
-/*ini_set('display_errors', '1');*/
+
 ini_set('display_errors', '1');
-$con = mysql_connect("localhost","username","password");
+
+#Mysql host, username and password.
+$con = mysql_connect("localhost","root","");
+
 if(!$con)
   die('Could not connect: ' . mysql_error());
   
-mysql_select_db("stock", $con) or die(mysql_error());;
+#database to use
+mysql_select_db("stocktest", $con) or die(mysql_error());;
+
 
 mysql_set_charset('utf8');
+
+#Allow to store big blobs
 $query = ( 'SET @@global.max_allowed_packet = ' . 100 * 1024 * 1024 );
 $result=mysql_query($query) or die(mysql_error());; 
 

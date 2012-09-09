@@ -34,67 +34,69 @@ $stock = new stock();
   if(is_array($stockList)) {
     foreach ($stockList as $stockID) 
       $each[] = port::getStockSummary($FROM, $TO, $stockID);
+    if (!empty($each)) {
+	  foreach ($each as $key => $row) {
+        $volume[$key]  = $row['mvalue'];
+        $edition[$key] = $row['utv'];
+      }
+    
 
-    foreach ($each as $key => $row) {
-      $volume[$key]  = $row['mvalue'];
-      $edition[$key] = $row['utv'];
-    }
-
-    $sum = array(
-      "mvalue" => "0",
-	  "avalue" => "0",
-	  "tprice" => "0",
-	  "utvkr" => "0",
-	  "diravkkr" => "0",
-	  "diravk" => "0",
-	  "rea" => "0"
-    );
-    array_multisort($volume, SORT_DESC, $edition, SORT_ASC, $each);
-    foreach ($each as $output2) 
-      {
-        $humanDate = sys::humanDate(date("Y-m-d",  strtotime($output2['date'])));
+      $sum = array(
+        "mvalue" => "0",
+	    "avalue" => "0",
+	    "tprice" => "0",
+	    "utvkr" => "0",
+	    "diravkkr" => "0",
+	    "diravk" => "0",
+	    "rea" => "0"
+      );
+      array_multisort($volume, SORT_DESC, $edition, SORT_ASC, $each);
+      foreach ($each as $output2) 
+        {
+          $humanDate = sys::humanDate(date("Y-m-d",  strtotime($output2['date'])));
  
-        echo "  <tr>\n";
-    	echo "    <td style=\"text-align: left;\"><a href=\"stockinfo.php?stockID=".$output2['id']."\">".$output2['shortName']."</a></td>\n"; 
-	    echo "    <td>".sys::number_readable($output2['q'], 2, ',', ' ')."</td>\n";
-	    echo "    <td><abbr title=\"Updateringsdatum: ".$humanDate."\">".number_format($output2['ltrade'], 2, ',', ' ')."</abbr></td>\n";
-	    echo "    <td>".sys::number_readable($output2['aprice'], 2, ',', ' ')."</td>\n";
-        echo "    <td>".sys::number_readable(round($output2['tprice']), 0, ',', ' ')."</td>\n";
-	    echo "    <td>".sys::number_readable(round($output2['mvalue']), 0, ',', ' ')."</td>\n";
-	    echo "    <td>".sys::number_readable(round($output2['utvkr']), 0, ',', ' ', true)."</td>\n";
-	    echo "    <td>".sys::number_readable($output2['rea'], 0, ',', ' ', true)."</td>\n";
-	    echo "    <td>".sys::number_readable(round($output2['diravkkr']), 0, ',', ' ', true)."</td>\n";
-	    echo "    <td>".sys::number_readable(round($output2['diravkkr'] + $output2['rea'] + $output2['utvkr']), 0, ',', ' ', true)."</td>\n";
-	    echo "  </tr>\n";
+          echo "  <tr>\n";
+    	  echo "    <td style=\"text-align: left;\"><a href=\"stockinfo.php?stockID=".$output2['id']."\">".$output2['shortName']."</a></td>\n"; 
+	      echo "    <td>".sys::number_readable($output2['q'], 2, ',', ' ')."</td>\n";
+	      echo "    <td><abbr title=\"Updateringsdatum: ".$humanDate."\">".number_format($output2['ltrade'], 2, ',', ' ')."</abbr></td>\n";
+	      echo "    <td>".sys::number_readable($output2['aprice'], 2, ',', ' ')."</td>\n";
+          echo "    <td>".sys::number_readable(round($output2['tprice']), 0, ',', ' ')."</td>\n";
+	      echo "    <td>".sys::number_readable(round($output2['mvalue']), 0, ',', ' ')."</td>\n";
+	      echo "    <td>".sys::number_readable(round($output2['utvkr']), 0, ',', ' ', true)."</td>\n";
+	      echo "    <td>".sys::number_readable($output2['rea'], 0, ',', ' ', true)."</td>\n";
+	      echo "    <td>".sys::number_readable(round($output2['diravkkr']), 0, ',', ' ', true)."</td>\n";
+	      echo "    <td>".sys::number_readable(round($output2['diravkkr'] + $output2['rea'] + $output2['utvkr']), 0, ',', ' ', true)."</td>\n";
+	      echo "  </tr>\n";
 		
-	    $sum['mvalue'] += $output2['mvalue'];
-	    $sum['avalue'] += $output2['aprice'] * $output2['q'];
-	    $sum['utvkr']  += $output2['utvkr'] ;
-	    $sum['tprice']  += $output2['tprice'] ;
-	    $sum['diravkkr']  += $output2['diravkkr'] ;
-	    $sum['rea']  += $output2['rea'] ;
+	      $sum['mvalue'] += $output2['mvalue'];
+	      $sum['avalue'] += $output2['aprice'] * $output2['q'];
+	      $sum['utvkr']  += $output2['utvkr'] ;
+	      $sum['tprice']  += $output2['tprice'] ;
+	      $sum['diravkkr']  += $output2['diravkkr'] ;
+	      $sum['rea']  += $output2['rea'] ;
 	
-	    $arr[] = array(
-	       "shortName" => $output2['shortName'],
-	       "mvalue"    => round($output2['mvalue']) );
-	    }
+  	      $arr[] = array(
+	         "shortName" => $output2['shortName'],
+	         "mvalue"    => round($output2['mvalue']) );
+	      }
 	  
-      echo "  <tfoot>\n ";
-      echo "    <tr>\n";
-	  echo "      <td colspan=\"3\" style=\"text-align: left;\">Totalt</td>\n"; 
-	  echo "      <td>".number_format($sum['avalue'], 0, ',', ' ')."</td>\n";
-	  echo "      <td>".number_format($sum['tprice'], 0, ',', ' ')."</td>\n";
-	  echo "      <td>".number_format($sum['mvalue'], 0, ',', ' ')."</td>\n";
-	  echo "      <td>".number_format($sum['utvkr'], 0, ',', ' ')."</td>\n";
-	  echo "      <td>".number_format($sum['rea'], 0, ',', ' ')."</td>\n";
-	  echo "      <td>".number_format($sum['diravkkr'], 0, ',', ' ')."</td>\n";
-	  echo "      <td>".sys::number_readable(($sum['diravkkr'] + $sum['rea'] + $sum['utvkr']), 0, ',', ' ', true)."</td>\n";
-	  echo "    </tr>\n";
-      echo "  </tfoot>\n";
-    } else {
+        echo "  <tfoot>\n ";
+        echo "    <tr>\n";
+	    echo "      <td colspan=\"3\" style=\"text-align: left;\">Totalt</td>\n"; 
+	    echo "      <td>".number_format($sum['avalue'], 0, ',', ' ')."</td>\n";
+	    echo "      <td>".number_format($sum['tprice'], 0, ',', ' ')."</td>\n";
+	    echo "      <td>".number_format($sum['mvalue'], 0, ',', ' ')."</td>\n";
+	    echo "      <td>".number_format($sum['utvkr'], 0, ',', ' ')."</td>\n";
+	    echo "      <td>".number_format($sum['rea'], 0, ',', ' ')."</td>\n";
+	    echo "      <td>".number_format($sum['diravkkr'], 0, ',', ' ')."</td>\n";
+	    echo "      <td>".sys::number_readable(($sum['diravkkr'] + $sum['rea'] + $sum['utvkr']), 0, ',', ' ', true)."</td>\n";
+	    echo "    </tr>\n";
+        echo "  </tfoot>\n";
+      }  else {
     $nodata = "Kunde inte hitta några poster";
+    }
+    echo "</table> ";
   }
-  echo "</table> ";
   echo $nodata;
  ?>
 

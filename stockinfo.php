@@ -201,7 +201,7 @@ while($startdate <= $TO) {
 
 
 if($compareToIndex) {
-  $transactions = port::getStockTransactions(array('1' => $stockID));
+  $transactions = port::getStockTransactionsOld(array('1' => $stockID));
 
   $omx = port::simIndex($transactions,$indexISIN);
 
