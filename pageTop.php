@@ -1,4 +1,87 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+<?php
+
+header("Content-type: text/html; charset=utf-8");
+session_start();
+
+#Both GET TO and GET FROM
+if(!empty($_GET['to']) && !empty($_GET['from'])){  
+  $_SESSION['TO']    = date('Y-m-d', strtotime($_GET['to']));
+  $_SESSION['FROM']  = date('Y-m-d', strtotime($_GET['from']));
+  $TO                = $_SESSION['TO'];
+  $FROM              = $_SESSION['FROM'];
+#Only GET TO
+} else if(!empty($_GET['to']) && empty($_GET['from'])){
+  $_SESSION['TO']    = date('Y-m-d', strtotime($_GET['to']));
+  $_SESSION['FROM']  = "2012-01-01";
+  $TO                = $_SESSION['TO'];
+  $FROM              = $_SESSION['FROM'];
+#Only GET FROM
+} else if(empty($_GET['to']) && !empty($_GET['from'])){
+  $_SESSION['TO']    = $TODAY;
+  $_SESSION['FROM']  = date('Y-m-d', strtotime($_GET['from']));
+  $TO                = $_SESSION['TO'];
+  $FROM              = $_SESSION['FROM'];
+#None, both SESSION TO & SESSION FROM
+} else if(!empty($_SESSION['TO']) && !empty($_SESSION['FROM'])) {
+  $TO                = $_SESSION['TO'];
+  $FROM              = $_SESSION['FROM'];
+#Standard dates.
+} else {
+  $TO   = $TODAY;
+  $FROM = "2012-01-01";
+}
+
+if(strtotime($TO)   > strtotime($TODAY)) 
+  $TO = $TODAY;
+if(strtotime($FROM) > strtotime($TO)) 
+  $FROM = $TO;
+if(strtotime($FROM) < strtotime('2011-05-01'))
+  $FROM = '2011-05-01';
+
+
+if(!empty($_GET['indexID'])) {
+  $_SESSION['indexID']  = $_GET['indexID'];
+  $indexISIN = $_SESSION['indexID'];
+} else if(!empty($_SESSION['indexID'])) {
+  $indexISIN = $_SESSION['indexID'];
+} else {
+  $indexISIN = '-';
+}
+
+if($indexISIN != '-')
+  $compareToIndex = true;
+else
+  $compareToIndex = false;
+
+
+if(!empty($_GET['stock'])) {
+  $_stock  = $_GET['stock'];
+  $_dField = 'readonly="readonly"';
+  $_dClass = ' dateInputGrey';
+} else {
+  $_stock  = '';
+  $_dClass = '';
+  $_dField = '';
+}
+
+
+if(isset($_GET['stock'])) {
+  $stockID = $_GET['stock'];
+}
+
+if(isset($_POST['stockList'])) {
+  $stockList = $_POST['stockList'];
+  $_SESSION['stockList'] = $stockList;
+} else if (isset($_SESSION['stockList'])) {
+  $stockList = $_SESSION['stockList'];
+} 
+
+
+
+
+
+
+?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
   <head>
@@ -110,7 +193,7 @@
 
 <?php
 if(empty($stockList)) {
-  $stockList = port::getStock('2010-01-01', '2015-01-01', "1");
+  $stockList = portGetStock('2010-01-01', '2015-01-01', "1");
 }
 ?>
 
@@ -137,7 +220,7 @@ if(empty($stockList)) {
 
 
 <?php
-if(rss::isUnread()) {
+if(rssIsUnread()) {
   echo '<a href="rss.php" class="menuObjectRight"><img src="img/unread.png" style="padding-right: 10px; margin: 0px;" width="22px"/></a>';
 }
 ?>
@@ -145,7 +228,7 @@ if(rss::isUnread()) {
 <select name="indexID" style="padding: 0; margin: 5;" class="menuObjectRight" accesskey="i">
 <?php 
 
-$indexList = index::getList();
+$indexList = indexGetList();
 echo '<option value="-">-</option>';
 foreach($indexList as $index){
   if($indexISIN == $index['ISIN'])
@@ -186,5 +269,5 @@ foreach($indexList as $index){
 	
 
 <?php
-sys::flush_page();
+sysFlush_page();
 ?>

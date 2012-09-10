@@ -2,12 +2,12 @@
   $site="update";
 
 include 'config.php';
-include 'class/port.php';
-include 'class/stock.php';
-include 'class/index.php';
-include 'class/sys.php';
-include 'class/rss.php';
-include 'class/update.php';
+include 'functions/port.php';
+include 'functions/stock.php';
+include 'functions/index.php';
+include 'functions/sys.php';
+include 'functions/rss.php';
+include 'functions/update.php';
 
 
 
@@ -66,24 +66,24 @@ if(!isset($_POST['up']) && !isset($_POST['sumV']) && !isset($_POST['sumD']) && !
 
 if(isset($_POST['NN'])) {
   echo "NORDNET:"; 
-  sys::flush_page();
-  if(update::nordnet($fetch_nordnet))
+  sysFlush_page();
+  if(updateNordnet($fetch_nordnet))
     echo "<span style=\"color: green\"> OK</span>";
   echo '<br>';
 }
 
 if(isset($_POST['MS'])) {
   echo "MORNINGSTAR:";
-  sys::flush_page();
-  if(update::morningstar($fetch_morningstar)) 
+  sysFlush_page();
+  if(updateMorningstar($fetch_morningstar)) 
     echo "<span style=\"color: green\"> OK</span>";
   echo '<br>';
 }
 
 if(isset($_POST['AVA'])) {
   echo "AVANZA:";
-  sys::flush_page();
-  if(update::avanza($fetch_avanza))
+  sysFlush_page();
+  if(updateAvanza($fetch_avanza))
     echo "<span style=\"color: green\"> OK</span>";
   echo '<br>';
 }
@@ -91,8 +91,8 @@ if(isset($_POST['AVA'])) {
 if(isset($_POST['OI'])) {
   ###Takes fetch from Database.
   echo "NASDAQ:";
-  sys::flush_page();
-  if(update::nasdaq($TODAY))
+  sysFlush_page();
+  if(updateNasdaq($TODAY))
     echo "<span style=\"color: green\"> OK</span>";
   else 
     echo "<span style=\"color: red\"> EJ OK</span>";
@@ -101,24 +101,24 @@ if(isset($_POST['OI'])) {
 
 if(isset($_POST['sumD'])) {
   echo "Sumering udelning:";
-  sys::flush_page();
-  if(port::cacheDividendSum())
+  sysFlush_page();
+  if(portCacheDividendSum())
     echo "<span style=\"color: green\"> OK</span>";
   echo '<br>';
 }
 
 if(isset($_POST['sumV'])) {
   echo "Sumering värde:";
-  sys::flush_page();
-  if(port::cacheHoldingSum())
+  sysFlush_page();
+  if(portCacheHoldingSum())
     echo "<span style=\"color: green\"> OK</span>";
   echo '<br>';
 }
 
 if(isset($_POST['updateRss'])) {
   echo "Uppdatering RSS:";
-  $array = rss::getList();
-  if(rss::update($array))
+  $array = rssGetList();
+  if(rssUpdate($array))
     echo "<span style=\"color: green\"> OK</span>";
   echo '<br>';
 }

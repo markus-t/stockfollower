@@ -3,33 +3,26 @@
   $site="port";
 
 include 'config.php';
-include 'class/port.php';
-include 'class/stock.php';
-include 'class/index.php';
-include 'class/rss.php';
-include 'class/sys.php';
+include 'functions/port.php';
+include 'functions/stock.php';
+include 'functions/index.php';
+include 'functions/rss.php';
+include 'functions/sys.php';
 include 'pageTop.php';
 
- 
- 
 $stockID = $_GET['stockID'];
 
-$port = new port();
-$date = $port->getStockSpan($stockID, "1");
+$date = portGetStockSpan($stockID, "1");
 
 $startdate = $date['0'];
-$stock = new stock();
-
-
 
 ?>
  
 	 
  
  <?php
-$port = new port();
-$output = $port->getStock($FROM, $TO, "1");
-$output2 = $port->getStockSummary('2000-01-01', $TODAY, $stockID);
+$output = portGetStock($FROM, $TO, "1");
+$output2 = portGetStockSummary('2000-01-01', $TODAY, $stockID);
     echo '<table width="28%" style="float: left;">';
     echo '<caption style="text-align: left; font-size:15px;">Data</caption>';
     echo "<tr>";
@@ -90,7 +83,7 @@ $output2 = $port->getStockSummary('2000-01-01', $TODAY, $stockID);
 	</tr>
 <?php
 
-  $activity = port::getStockActivityOld('2000-01-01', $TO, $stockID);
+  $activity = portGetStockActivityOld('2000-01-01', $TO, $stockID);
     $tID  = "1";
     $amount = "0";
     foreach($activity as $key ){
@@ -123,9 +116,9 @@ $output2 = $port->getStockSummary('2000-01-01', $TODAY, $stockID);
   $chartColumns['1'] = "data.addColumn({type:'string', role:'annotationText'});\n";
 
   if($compareToIndex) {
-    $chartColumns['0'] = "data.addColumn('number', '".index::resName($indexISIN)."');\n";
-    $indexToScale = index::getValue($startdate, $indexISIN);
-    $scaleAgainst = stock::getValue($stockID, $startdate);
+    $chartColumns['0'] = "data.addColumn('number', '".indexResName($indexISIN)."');\n";
+    $indexToScale = indexGetValue($startdate, $indexISIN);
+    $scaleAgainst = stockGetValue($stockID, $startdate);
     @$scale = $scaleAgainst['value'] / $indexToScale['price'];
   }
 
@@ -133,11 +126,11 @@ $output2 = $port->getStockSummary('2000-01-01', $TODAY, $stockID);
   $annotation = 1;
   $chart_data = '';
   while(strtotime($startdate) <= strtotime($TODAY)) {
-    $output = stock::getValue($stockID, $startdate);
-    $ann = port::getStockAction($stockID, $startdate );
+    $output = stockGetValue($stockID, $startdate);
+    $ann = portGetStockAction($stockID, $startdate );
     $data = '';
     if($compareToIndex) {
-      $index = index::getValue($startdate, $indexISIN);
+      $index = indexGetValue($startdate, $indexISIN);
       $data  = "," . round($index['price'] * $scale, 2);
     }
 
@@ -189,11 +182,11 @@ $output2 = $port->getStockSummary('2000-01-01', $TODAY, $stockID);
 
     <div id="chart_div" class="chart" style="width: 100%; height: 250px; float: right; border-width:thin; border-style:solid; margin: 10px 0 0 0;"></div>
 <?php
-sys::flush_page();
+sysFlush_page();
  
 $startdate = $date['0'];
 while($startdate <= $TO) {
-  $var[] = port::cacheGetHoldingSum($startdate, $stockID);
+  $var[] = portCacheGetHoldingSum($startdate, $stockID);
   $startdate = strtotime ( '+1 day' , strtotime ($startdate) ) ;
   $startdate = date ( 'Y-m-d' , $startdate ); 
 }
@@ -201,9 +194,9 @@ while($startdate <= $TO) {
 
 
 if($compareToIndex) {
-  $transactions = port::getStockTransactionsOld(array('1' => $stockID));
+  $transactions = portGetStockTransactionsOld(array('1' => $stockID));
 
-  $omx = port::simIndex($transactions,$indexISIN);
+  $omx = portSimIndex($transactions,$indexISIN);
 
 }
 
@@ -217,7 +210,7 @@ if($compareToIndex) {
         data.addColumn('string', 'Year');
         data.addColumn('number', 'Utveckling');
         <?php if($compareToIndex) { ?>
-        data.addColumn('number', 'Utveckling s:a i <?php echo index::resName($indexISIN);?>');
+        data.addColumn('number', 'Utveckling s:a i <?php echo indexResName($indexISIN);?>');
         <?php } ?>
 		data.addColumn({type:'string', role:'annotation'});
 		data.addColumn({type:'string', role:'annotationText'});
@@ -254,11 +247,11 @@ if($compareToIndex) {
 <div style="width: 100%; height: 250px; float: right; margin: 10px 0 0 0">
 <?php
 
-  $out = rss::readStockID($stockID);
+  $out = rssReadStockID($stockID);
   if(!empty($out)) {
     echo '<table width="100%"><caption style="text-align: left; font-size:15px;">Pressmedelanden</caption>';
     foreach($out as $each) {
-      $stockName = stock::resName($each['stockID']);
+      $stockName = stockResName($each['stockID']);
       echo "<tr>";
       echo "<td style=\"text-align:left;\">" . $each['pubDate'] . '</td>';
       echo '<td style="text-align:left;">';

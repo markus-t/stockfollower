@@ -1,109 +1,38 @@
 <?php
 
-header("Content-type: text/html; charset=utf-8");
-session_start();
-
+#Error reporting
 error_reporting(E_ALL ^ E_STRICT);
 
+#Display errors?
 ini_set('display_errors', '1');
 
 #Mysql host, username and password.
 $con = mysql_connect("localhost","root","");
 
+#check connection to Mysql
 if(!$con)
   die('Could not connect: ' . mysql_error());
   
 #database to use
 mysql_select_db("stocktest", $con) or die(mysql_error());;
 
-
+#charset to use
 mysql_set_charset('utf8');
 
 #Allow to store big blobs
 $query = ( 'SET @@global.max_allowed_packet = ' . 100 * 1024 * 1024 );
-$result=mysql_query($query) or die(mysql_error());; 
+$result=mysql_query($query); 
 
-
+#Todays date
 $TODAY = date("Y-m-d");
 
+#Allow script to run a long time to finish updates
 set_time_limit(200);
-
-#Both GET TO and GET FROM
-if(!empty($_GET['to']) && !empty($_GET['from'])){  
-  $_SESSION['TO']    = date('Y-m-d', strtotime($_GET['to']));
-  $_SESSION['FROM']  = date('Y-m-d', strtotime($_GET['from']));
-  $TO                = $_SESSION['TO'];
-  $FROM              = $_SESSION['FROM'];
-#Only GET TO
-} else if(!empty($_GET['to']) && empty($_GET['from'])){
-  $_SESSION['TO']    = date('Y-m-d', strtotime($_GET['to']));
-  $_SESSION['FROM']  = "2012-01-01";
-  $TO                = $_SESSION['TO'];
-  $FROM              = $_SESSION['FROM'];
-#Only GET FROM
-} else if(empty($_GET['to']) && !empty($_GET['from'])){
-  $_SESSION['TO']    = $TODAY;
-  $_SESSION['FROM']  = date('Y-m-d', strtotime($_GET['from']));
-  $TO                = $_SESSION['TO'];
-  $FROM              = $_SESSION['FROM'];
-#None, both SESSION TO & SESSION FROM
-} else if(!empty($_SESSION['TO']) && !empty($_SESSION['FROM'])) {
-  $TO                = $_SESSION['TO'];
-  $FROM              = $_SESSION['FROM'];
-#Standard dates.
-} else {
-  $TO   = $TODAY;
-  $FROM = "2012-01-01";
-}
-
-if(strtotime($TO)   > strtotime($TODAY)) 
-  $TO = $TODAY;
-if(strtotime($FROM) > strtotime($TO)) 
-  $FROM = $TO;
-if(strtotime($FROM) < strtotime('2011-05-01'))
-  $FROM = '2011-05-01';
-
-
-if(!empty($_GET['indexID'])) {
-  $_SESSION['indexID']  = $_GET['indexID'];
-  $indexISIN = $_SESSION['indexID'];
-} else if(!empty($_SESSION['indexID'])) {
-  $indexISIN = $_SESSION['indexID'];
-} else {
-  $indexISIN = '-';
-}
-
-if($indexISIN != '-')
-  $compareToIndex = true;
-else
-  $compareToIndex = false;
-
-
-if(!empty($_GET['stock'])) {
-  $_stock  = $_GET['stock'];
-  $_dField = 'readonly="readonly"';
-  $_dClass = ' dateInputGrey';
-} else {
-  $_stock  = '';
-  $_dClass = '';
-  $_dField = '';
-}
-
-
-if(isset($_GET['stock'])) {
-  $stockID = $_GET['stock'];
-}
-
-if(isset($_POST['stockList'])) {
-  $stockList = $_POST['stockList'];
-  $_SESSION['stockList'] = $stockList;
-} else if (isset($_SESSION['stockList'])) {
-  $stockList = $_SESSION['stockList'];
-} 
 
 #Dividend 1: Dividend at day based on quantity at day
 #Dividend 2: Dividend every day based on last know interest on year basis. (Bank year).
 
+#DOES NOT WORK YET, stockId over 1000 is type 3 and below 1000 is type 1,2
 $stockProperties = 
   array(
     array('type'     => 1,
@@ -118,32 +47,27 @@ $stockProperties =
 	      'name'     => 'Räntebärande konto',
 		  'dividend' => 2));
 		  
+
+#How many days to calculate intereset on.
 $daysInBankYear = 360;
 
+#Link to nordet, morningstar and avanza. Multidimensional array.
 $fetch_nordnet = 
   array(
-    array('stockID' => 1,
-	      'link'    => 'https://www.nordnet.se/mux/laddaner/historikLaddaner.ctl?isin=SE0000112724&country=Sverige'),
-    array('stockID' => 11,
-	      'link'    => 'https://www.nordnet.se/mux/laddaner/historikLaddaner.ctl?isin=SE0003208792&country=Sverige')
+    array('stockID' => 2,
+  	      'link'    => 'https://www.nordnet.se/mux/laddaner/historikLaddaner.ctl?isin=SE0000635401&country=Sverige'),
   ); 
 
 $fetch_morningstar = 
   array( 
     array('stockID' => 5,
 	      'link'    => 'http://morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P00005U1J&programid=0000000000'),
-    array('stockID' => 7,
-	      'link'    => 'http://morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P00008WHN&programid=0000000000'),
-    array('stockID' => 9,
-	      'link'    => 'http://morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P00000LGM&programid=0000000000')
   ); 
 
 $fetch_avanza = 
   array( 
-    array('stockID' => 6,
-	      'link'    => 'https://www.avanza.se/aza/aktieroptioner/kurslistor/aktie.jsp?orderbookId=298607'),
-    array('stockID' => 13,
-              'link'    => 'https://www.avanza.se/aza/aktieroptioner/kurslistor/aktie.jsp?orderbookId=362016')
+    array('stockID' => 2,
+	      'link'    => 'https://www.avanza.se/aza/aktieroptioner/kurslistor/aktie.jsp?orderbookId=216967'),
     ); 
 
 ?>
