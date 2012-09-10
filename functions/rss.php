@@ -13,7 +13,7 @@ include './classes/rss_php.php';
         $query="SELECT * FROM rss WHERE stockID = '$var[stockID]' AND pubDate = '$time'";
         $result = mysql_query($query);
         if(0 == mysql_num_rows($result)) {
-          $pdf = rss::getRelease($each['link']);
+          $pdf = rssGetRelease($each['link']);
           $query = "INSERT INTO rss (stockID, new,              pubDate,  title,          link, pdf)
                     VALUES          ('$var[stockID]', TRUE,      '$time',  '$each[title]', '$each[link]', '" . mysql_real_escape_string($pdf['data']) ."')";
           $result=mysql_query($query) or die(mysql_error());;
