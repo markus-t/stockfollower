@@ -30,11 +30,11 @@ if(!isset($_GET['load'])) {
 		$stockName = stockResName($each['stockID']);
 		echo "<tr>";
 		echo "<td style=\"text-align:left;\">" . $each['pubDate'] . '</td>';
-		echo "<td style=\"text-align:left;\">" . $stockName['name'] . '</a></td>';
+		echo "<td style=\"text-align:left;\">" . $stockName['name'] . '</td>';
 
 		echo '<td style="text-align:left;">';
 		if($each['new'] == '1')
-		echo '<img src="img/unread.png" width="12px"><b>';
+		echo '<img src="img/unread.png" width="12px" alt="Oläst"/><b>';
 		echo '<a href="rss.php?load=' . $each['ID'] . '">' . $each['title'] . '</a>';
 		if($each['new'] == '1')
 		echo '</b>';

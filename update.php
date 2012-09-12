@@ -18,35 +18,35 @@ include 'pageTop.php';
 if(!isset($_POST['up']) && !isset($_POST['sumV']) && !isset($_POST['sumD']) && !isset($_POST['updateRss'])) {
 ?>
 
-<form name="update" action="./update.php" method="POST">
-  <input type="checkbox" name="AVA" value="Bike" checked class="radio"/>Avanza<br />
-  <input type="checkbox" name="MS" value="Bike" checked />Morningstar<br />
-  <input type="checkbox" name="NN" value="Bike" checked />Nordnet<br />
-  <input type="checkbox" name="OI" value="Bike" checked />OMX INDEX<br /><br />
-  <input type="checkbox" name="sumD" value="Bike" checked />Summering Utdelning<br />
-  <input type="checkbox" name="sumV" value="Bike" checked />Summering Värde<br />
-  <br>
-  <input type="checkbox" name="updateRss" value="Bike" checked />Pressmedelanden<br />
-  <br>
+<form name="update" action="./update.php" method="post">
+  <input type="checkbox" name="AVA" value="Bike" checked="checked" class="radio"/>Avanza<br />
+  <input type="checkbox" name="MS" value="Bike" checked="checked" />Morningstar<br />
+  <input type="checkbox" name="NN" value="Bike" checked="checked" />Nordnet<br />
+  <input type="checkbox" name="OI" value="Bike" checked="checked" />OMX INDEX<br /><br />
+  <input type="checkbox" name="sumD" value="Bike" checked="checked" />Summering Utdelning<br />
+  <input type="checkbox" name="sumV" value="Bike" checked="checked" />Summering Värde<br />
+  <br />
+  <input type="checkbox" name="updateRss" value="Bike" checked="checked" />Pressmedelanden<br />
+  <br />
   <input type="submit" name="up" value="Kör manuell uppdatering">
 </form> 
 
-<hr \>
-<br>
+<hr />
+<br />
 
-<form name="update1" action="./update.php" method="POST">
+<form name="update1" action="./update.php" method="post">
   <input type="submit" name="sumD" value="Uppdatera tabell för utdelning">
 </form> 
 
-<br>
-<form name="update2" action="./update.php" method="POST">
+<br />
+<form name="update2" action="./update.php" method="post">
   <input type="submit" name="sumV" value="Uppdatera tabell för summa">
 </form> 
 
-<hr \>
+<hr />
 
-<br>
-<form name="updateRss" action="./update.php" method="POST">
+<br />
+<form name="updateRss" action="./update.php" method="post">
   <input type="submit" name="updateRss" value="Uppdatera RSS">
 </form> <!--
 <hr \>
@@ -69,7 +69,7 @@ if(isset($_POST['NN'])) {
   sysFlush_page();
   if(updateNordnet($fetch_nordnet))
     echo "<span style=\"color: green\"> OK</span>";
-  echo '<br>';
+  echo '<br />';
 }
 
 if(isset($_POST['MS'])) {
@@ -77,7 +77,7 @@ if(isset($_POST['MS'])) {
   sysFlush_page();
   if(updateMorningstar($fetch_morningstar)) 
     echo "<span style=\"color: green\"> OK</span>";
-  echo '<br>';
+  echo '<br />';
 }
 
 if(isset($_POST['AVA'])) {
@@ -85,7 +85,7 @@ if(isset($_POST['AVA'])) {
   sysFlush_page();
   if(updateAvanza($fetch_avanza))
     echo "<span style=\"color: green\"> OK</span>";
-  echo '<br>';
+  echo '<br />';
 }
 
 if(isset($_POST['OI'])) {
@@ -96,7 +96,7 @@ if(isset($_POST['OI'])) {
     echo "<span style=\"color: green\"> OK</span>";
   else 
     echo "<span style=\"color: red\"> EJ OK</span>";
-  echo '<br>';
+  echo '<br />';
 }
 
 if(isset($_POST['sumD'])) {
@@ -104,7 +104,7 @@ if(isset($_POST['sumD'])) {
   sysFlush_page();
   if(portCacheDividendSum())
     echo "<span style=\"color: green\"> OK</span>";
-  echo '<br>';
+  echo '<br />';
 }
 
 if(isset($_POST['sumV'])) {
@@ -112,7 +112,7 @@ if(isset($_POST['sumV'])) {
   sysFlush_page();
   if(portCacheHoldingSum())
     echo "<span style=\"color: green\"> OK</span>";
-  echo '<br>';
+  echo '<br />';
 }
 
 if(isset($_POST['updateRss'])) {
@@ -120,10 +120,10 @@ if(isset($_POST['updateRss'])) {
   $array = rssGetList();
   if(rssUpdate($array))
     echo "<span style=\"color: green\"> OK</span>";
-  echo '<br>';
+  echo '<br />';
 }
 
-echo "<br><br> KLART!";
+echo "<br /><br /> KLART!";
 }
 include 'pageBottom.php';
 

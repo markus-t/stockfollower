@@ -14,7 +14,7 @@ function updateNordnet($fetch) {
 			preg_match ($reg, $line, $matches);
 			if(!empty($matches)) {
 				$matches['2'] = preg_replace("/,/", ".", $matches['2']);
-				$query = "INSERT IGNORE stockPrice (date, price, stockID)
+				$query = "REPLACE INTO stockPrice (date, price, stockID)
 					VALUES ('$matches[1]', '$matches[2]', '$address[stockID]')";
 				$output .= $query . "\n";
 				$result=mysql_query($query) or die(mysql_error());; 
@@ -46,19 +46,18 @@ function updateMorningstar($fetch) {
 
 #####AVANZA#####
 function updateAvanza($fetch) {
+	$output = '';
 	### Tidigaste klockslag vi kan ta hem rätt uppgifter
 	$minTid = '18';
 	### Senaste klockslag vi kan ta hem rätt uppgifter
 	$maxTid = '09';
-	$output = '';
 	$hourNow = date('H');
-	$unixt = time();
 	if($maxTid > $hourNow) {
 		$offset = ($hourNow + 1) * 60 * 60;
-		$date = date('Y-m-d', $unixt - $offset);
+		$date = date('Y-m-d', time() - $offset);
 	} else if($minTid <= $hourNow) {
 		$date = date('Y-m-d');
-	} else{
+	} else {
 		return("tiden är utanför tillåten tid (AVANZA)");
 	}
 	foreach($fetch as $address) {
@@ -69,8 +68,8 @@ function updateAvanza($fetch) {
 		if(!empty($matches)) {
 			# Ersätt komma med punkt.
 			$matches['6'] = preg_replace("/,/", ".", $matches['6']);
-			$query = "INSERT IGNORE stockPrice (date, price, stockID)
-				VALUES ('$date', '$matches[6]', '$address[stockID]')";
+			$query = "REPLACE INTO stockPrice (date, price, stockID)
+						VALUES ('$date', '$matches[6]', '$address[stockID]')";
 			$output .= $query . "\n";
 			$result=mysql_query($query) or die(mysql_error());;
 		}  
@@ -160,9 +159,7 @@ function updateNasdaq($toDate) {
 		$output = updateNasdaqParse($ng);
 		updateIndex($output, $index['ISIN']);
 	} 
-	
 	return true;
-	return false;
 }
 
 

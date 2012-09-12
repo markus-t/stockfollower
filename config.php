@@ -12,7 +12,10 @@ $con = mysql_connect("localhost","root","");
 #check connection to Mysql
 if(!$con)
   die('Could not connect: ' . mysql_error());
-  
+    
+#Timezone
+date_default_timezone_set('Europe/Berlin');
+
 #database to use
 mysql_select_db("stocktest", $con) or die(mysql_error());;
 

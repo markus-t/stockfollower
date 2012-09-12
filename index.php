@@ -245,7 +245,7 @@ foreach(portGetStock($FROM, $TO, "1") as $stockID) {
   echo '<input type="checkbox" name="stockList[]" value="'.$stockID.'" '.$checked.' />' ;
   $res = stockResName($stockID);
   print_r($res['shortName']);
-  echo "<br>\n";
+  echo "<br />\n";
 }
 ?>
   <input type="submit" value="OK" id="close" />

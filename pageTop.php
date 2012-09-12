@@ -221,7 +221,7 @@ if(empty($stockList)) {
 
 <?php
 if(rssIsUnread()) {
-  echo '<a href="rss.php" class="menuObjectRight"><img src="img/unread.png" style="padding-right: 10px; margin: 0px;" width="22px"/></a>';
+  echo '<a href="rss.php" class="menuObjectRight"><img src="img/unread.png" style="padding-right: 10px; margin: 0px;" width="22px" alt="D"/></a>';
 }
 ?>
   <form name="range" action="" method="get" class="menuObjectRight">

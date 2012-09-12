@@ -3,35 +3,32 @@
 ### Get a list of every paper between dates.
 function portGetStock($dateLow, $dateHigh, $user = '1') {
 	$output = array();
-	$query="
-SELECT stockID,SUM(quantity) AS totalBought FROM stockBought 
-WHERE date <= '$dateHigh'
-GROUP BY stockID;";
+	$query="SELECT stockID,SUM(quantity) AS totalBought FROM stockBought 
+			WHERE date <= '$dateHigh'
+			GROUP BY stockID;";
 	$result=mysql_query($query) or die(mysql_error());;
 	while($row = mysql_fetch_array($result)) {
-		$query="
-	SELECT stockID,SUM(quantity) AS totalBought FROM stockBought 
-	WHERE date <= '$dateLow'
-	AND stockID = '$row[stockID]';";
+		$query="SELECT stockID,SUM(quantity) AS totalBought FROM stockBought 
+				WHERE date <= '$dateLow'
+				AND stockID = '$row[stockID]';";
 		$resultBought=mysql_query($query) or die(mysql_error());;
 
-		$query="
-	SELECT stockID,SUM(quantity) AS totalSold FROM stockSold 
-	WHERE date <= '$dateLow'
-	AND stockID = '$row[stockID]';";
+		$query="SELECT stockID,SUM(quantity) AS totalSold FROM stockSold 
+				WHERE date <= '$dateLow'
+				AND stockID = '$row[stockID]';";
 		$resultSold=mysql_query($query) or die(mysql_error());;
 
 		$sold   = mysql_fetch_row($resultSold);
 		$bought = mysql_fetch_row($resultBought);
 
 		if(empty($bought['1']))
-		$bought['1'] = '0';
+			$bought['1'] = '0';
 		
 		if(empty($sold['1'])) 
-		$sold['1'] = '0';
+			$sold['1'] = '0';
 		
 		if(!($bought['1'] - $sold['1'] == '0' && $row['totalBought'] - $sold['1'] == '0' && !empty($row['totalBought']) )) 
-		$output[] = $row['stockID'];
+			$output[] = $row['stockID'];
 		
 	}
 	return $output;
@@ -121,8 +118,7 @@ function portGetQuantity($stockID, $date) {
 
 ### Get dividend total amount
 function portGetDividend($lowDate, $highDate, $dividend) {
-	$output = array(
-	'sum' => "0");
+	$output = array('sum' => "0");
 	foreach($dividend as $row) {
 		###fel funktion
 		$temp = portGetQuantity($row['stockID'], $row['date']);
@@ -172,49 +168,48 @@ function portGetStockTransactionsOld($arr_stockID, $lowDate = '2000-01-01',$high
 
 ### Simulate index graph based on array of transactions
 function portSimIndex($transactions, $indexID) {
-	$output  = array();
-	$ID      = '1';
-	$a       = '0';
-	$fT      = '2000-01-01';
-	$tT      = '2013-01-01';
-	$mValue  = '0';
-	$aValue  = '0';
-	$q       = '0';
+	$output  		= array();
+	$a       		= '0';
+	$fromTime      	= '2000-01-01';
+	$toTime      	= '2013-01-01';
+	$marketValue  	= '0';
+	$acquireValue  	= '0';
+	$quantity       = '0';
 	$left    = true;
 	#Go trough every day
-	while($fT <= $tT) {
-		$indexPrice = indexGetValue($fT, $indexID);
+	while($fromTime <= $toTime) {
+		$indexPrice = indexGetValue($fromTime, $indexID);
 		#For every day go trough each transaction that happens that day
 
-		while($left == true && $transactions[$a]['date'] == $fT){
+		while($left == true && $transactions[$a]['date'] == $fromTime){
 			$row = $transactions[$a];
 
-			if($row['info'] == 'bought' && $fT == $row['date']) { 
-				@$q      += ($row['quantity'] * $row['price']) / $indexPrice['price'];
-				$aValue += $row['quantity']  * $row['price'];
-			} else if($row['info'] == 'sold' && $fT == $row['date']){
-				$q      -= ($row['quantity'] * $row['price']) / $indexPrice['price'];
-				$aValue -= $row['quantity']  * $row['price'];
+			if($row['info'] == 'bought' && $fromTime == $row['date']) { 
+				@$quantity      += ($row['quantity'] * $row['price']) / $indexPrice['price'];
+				$acquireValue += $row['quantity']  * $row['price'];
+			} else if($row['info'] == 'sold' && $fromTime == $row['date']){
+				$quantity      -= ($row['quantity'] * $row['price']) / $indexPrice['price'];
+				$acquireValue -= $row['quantity']  * $row['price'];
 			}
 			#Next transaction
-			if($fT == $row['date'] ) $a++;
+			if($fromTime == $row['date'] ) $a++;
 			#Next transaction does not exist?
 			if(count($transactions) == $a) $left = false; 
 		}
 		#Calculate values to return
-		$mV32 = $q * $indexPrice['price'];
-		$aV32 = $aValue;
+		$marketValue = $quantity * $indexPrice['price'];
+		$acquireValue = $acquireValue;
 
 		#Return values
-		$output[$fT] = array( 
-		"mValue" => $mV32,
-		"aValue" => $aV32,
-		"utv"    => round($mV32 - $aV32)
+		$output[$fromTime] = array( 
+		"mValue" => $marketValue,
+		"aValue" => $acquireValue,
+		"utv"    => round($marketValue - $acquireValue)
 		);
 
 		#Set next day
-		$fT = strtotime ( '+1 day' , strtotime ($fT) );
-		$fT = date ( 'Y-m-d' , $fT );  
+		$fromTime = strtotime ( '+1 day' , strtotime ($fromTime) );
+		$fromTime = date ( 'Y-m-d' , $fromTime );  
 	}
 	return $output;
 }
@@ -401,24 +396,16 @@ function portCacheHoldingSum() {
 
 			$output['date'] = $fT;
 
-			$query = "INSERT INTO cHoldingSum 
-					VALUES ('$key', 
-						'$fT',
-						'$output[aprice]', 
-						'$output[mValue]', 
-						'$output[tmValue]', 
-						'$output[taValue]', 
-						'$output[utv]',
-						'$Quantity[rea]',
-						'$output[diravk]') 
-					ON DUPLICATE KEY UPDATE
-						aprice  =   '$output[aprice]',
-						mValue  =   '$output[mValue]',
-						tmValue =   '$output[tmValue]',
-						taValue =   '$output[taValue]',
-						utv     =   '$output[utv]',
-						rea     =   '$Quantity[rea]',
-						diravk  =   '$output[diravk]'";
+			$query = "REPLACE INTO cHoldingSum 
+						VALUES ('$key', 
+								'$fT',
+								'$output[aprice]', 
+								'$output[mValue]', 
+								'$output[tmValue]', 
+								'$output[taValue]', 
+								'$output[utv]',
+								'$Quantity[rea]',
+								'$output[diravk]')";
 			$result=mysql_query($query) or die(mysql_error());;
 			$totAm += $output['utv'];
 		}
