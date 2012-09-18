@@ -63,6 +63,7 @@ if(!isset($_POST['up']) && !isset($_POST['sumV']) && !isset($_POST['sumD']) && !
 <?php
 } else {
 
+mysql_query("BEGIN");
 
 if(isset($_POST['NN'])) {
   echo "NORDNET:"; 
@@ -117,11 +118,22 @@ if(isset($_POST['sumV'])) {
 
 if(isset($_POST['updateRss'])) {
   echo "Uppdatering RSS:";
+  sysFlush_page();
   $array = rssGetList();
   if(rssUpdate($array))
     echo "<span style=\"color: green\"> OK</span>";
   echo '<br />';
 }
+
+
+echo "Kör uppdateringsordrar databas:";
+sysFlush_page();
+if(mysql_query("COMMIT")) 
+    echo "<span style=\"color: green\"> OK</span>";
+else
+    echo "<span style=\"color: red\"> INTE OK</span>";
+echo '<br />';
+	
 
 echo "<br /><br /> KLART!";
 }

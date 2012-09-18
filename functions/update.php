@@ -15,7 +15,7 @@ function updateNordnet($fetch) {
 			if(!empty($matches)) {
 				$matches['2'] = preg_replace("/,/", ".", $matches['2']);
 				$query = "REPLACE INTO stockPrice (date, price, stockID)
-					VALUES ('$matches[1]', '$matches[2]', '$address[stockID]')";
+							VALUES ('$matches[1]', '$matches[2]', '$address[stockID]')";
 				$output .= $query . "\n";
 				$result=mysql_query($query) or die(mysql_error());; 
 			}  
@@ -145,7 +145,7 @@ function updateNasdaqGet($instrument, $toDate, $fromDate = '2012-05-01') {
 function updateIndex($values, $isin){
 	$output = '';
 	foreach($values as $key) {
-		$query = "INSERT IGNORE indexPrice (ISIN, date, price)
+		$query = "REPLACE INTO indexPrice (ISIN, date, price)
 				VALUES ('$isin', '$key[date]', '$key[price]')";
 		$result=mysql_query($query) or die(mysql_error());;
 	}

@@ -307,6 +307,7 @@ function portGetStockAction($stockID, $date) {
 }
 
 function portCacheDividendSum() {
+	mysql_query("BEGIN");
 	global $daysInBankYear;
 	$output = portGetStock('2011-05-01', '2013-01-01', "1");
 	foreach($output as $stockID) {
@@ -318,10 +319,8 @@ function portCacheDividendSum() {
 					$tmValue = 0;
 					$qAtDividend = portGetQuantity($stockID, $key['date']);
 					$tmValue = $key['dividend'] * $qAtDividend['quantity'] ;
-					$query="INSERT INTO cDividendSum 
-					VALUES ( '$stockID', '$key[date]', '$tmValue' ) 
-					ON DUPLICATE KEY UPDATE 
-					sum = '$tmValue'";
+					$query="REPLACE INTO cDividendSum 
+							VALUES ( '$stockID', '$key[date]', '$tmValue' )";
 					$result=mysql_query($query) or die(mysql_error());;
 				} 
 				### Dividend type 1 calculations
@@ -338,10 +337,8 @@ function portCacheDividendSum() {
 					$qAtDividend  = portGetQuantity($stockID, $fromTime);
 					
 					$dividendSum = (($interest / 100) / $daysInBankYear) * $qAtDividend['quantity'] ;
-					$query="INSERT INTO cDividendSum 
-					VALUES ( '$stockID', '$fromTime', '$dividendSum' ) 
-					ON DUPLICATE KEY UPDATE 
-					sum = '$dividendSum'";
+					$query="REPLACE INTO cDividendSum 
+									VALUES ( '$stockID', '$fromTime', '$dividendSum' )";
 					$result=mysql_query($query) or die(mysql_error());;
 					
 					$fromTime = strtotime ( '+1 day' , strtotime ($fromTime) );
