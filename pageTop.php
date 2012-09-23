@@ -207,10 +207,10 @@ if(empty($stockList)) {
   <div id="container">
 	<div id="navigation">
 		<ul>
-			<li><a href="index.php" accesskey="1" <?php if($site == "port") echo "style=\"background: #C9C;\""; ?> >Portfölj</a></li>
-			<li><a href="rss.php" accesskey="2" <?php if($site == "rss") echo "style=\"background: #9CC;\""; ?>>Press</a></li>
+			<li><a href="index.php" accesskey="1" <?php if($site == "port") echo "style=\"background: #C9C;\""; ?> ><img src="./img/money.png" height="32" width="32" border="0" alt="Portfölj"/></a></li>
+			<li><a href="rss.php" accesskey="2" <?php if($site == "rss") echo "style=\"background: #9CC;\""; ?>><img src="./img/news.png" height="32" width="32" border="0" alt="Nyheter"/></a></li>
             <!--<li><a href="stockIndex.php" accesskey="4" <?php if($site == "index") echo "style=\"background: #99C;\""; ?>>Index</a></li>-->
-            <li><a href="update.php" accesskey="3" <?php if($site == "update") echo "style=\"background: #CC9;\""; ?>>Updatera	</a></li>
+            <li><a href="update.php" accesskey="3" <?php if($site == "update") echo "style=\"background: #CC9;\""; ?>><img src="./img/update.png" height="32" width="32" border="0" alt="Updatera"/></a></li>
 		</ul> 
 <div id="menu_right">
 

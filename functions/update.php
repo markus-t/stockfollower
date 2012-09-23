@@ -14,7 +14,7 @@ function updateNordnet($fetch) {
 			preg_match ($reg, $line, $matches);
 			if(!empty($matches)) {
 				$matches['2'] = preg_replace("/,/", ".", $matches['2']);
-				$query = "REPLACE INTO stockPrice (date, price, stockID)
+				$query = "REPLACE INTO stockprice (date, price, stockID)
 							VALUES ('$matches[1]', '$matches[2]', '$address[stockID]')";
 				$output .= $query . "\n";
 				$result=mysql_query($query) or die(mysql_error());; 
@@ -34,7 +34,7 @@ function updateMorningstar($fetch) {
 			preg_match ($reg, $line, $matches);
 			if(!empty($matches)) {
 				$matches['1'] = preg_replace("/,/", ".", $matches['1']);
-				$query = "INSERT IGNORE stockPrice (date, price, stockID)
+				$query = "INSERT IGNORE stockprice (date, price, stockID)
 					VALUES ('$matches[2]', '$matches[1]', '$address[stockID]')";
 				$output .= $query . "\n";
 				$result=mysql_query($query) or die(mysql_error());; 
@@ -68,7 +68,7 @@ function updateAvanza($fetch) {
 		if(!empty($matches)) {
 			# Ersätt komma med punkt.
 			$matches['6'] = preg_replace("/,/", ".", $matches['6']);
-			$query = "REPLACE INTO stockPrice (date, price, stockID)
+			$query = "REPLACE INTO stockprice (date, price, stockID)
 						VALUES ('$date', '$matches[6]', '$address[stockID]')";
 			$output .= $query . "\n";
 			$result=mysql_query($query) or die(mysql_error());;
@@ -145,7 +145,7 @@ function updateNasdaqGet($instrument, $toDate, $fromDate = '2012-05-01') {
 function updateIndex($values, $isin){
 	$output = '';
 	foreach($values as $key) {
-		$query = "REPLACE INTO indexPrice (ISIN, date, price)
+		$query = "REPLACE INTO indexprice (ISIN, date, price)
 				VALUES ('$isin', '$key[date]', '$key[price]')";
 		$result=mysql_query($query) or die(mysql_error());;
 	}

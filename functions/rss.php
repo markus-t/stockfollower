@@ -79,7 +79,7 @@ include './classes/rss_php.php';
     return '0' < mysql_num_rows($result) ? TRUE : FALSE;
   }
   function rssGetList() {
-    $query="SELECT * FROM stockName";
+    $query="SELECT * FROM stockname";
     $result=mysql_query($query) or die(mysql_error());;
     while($row = mysql_fetch_assoc($result)) {
       if(!empty($row['rss'])) {

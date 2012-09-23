@@ -167,7 +167,7 @@ include 'pageTop.php';
 	  $firstRun = false;
     }
 
-    $query="SELECT SUM(utv) AS utv, SUM(diravk) AS diravk, SUM(rea) AS rea FROM cHoldingSum
+    $query="SELECT SUM(utv) AS utv, SUM(diravk) AS diravk, SUM(rea) AS rea FROM choldingsum
             WHERE date    = '$fT'
             AND ( $orStockList )";
     $result=mysql_query($query) or die(mysql_error());;

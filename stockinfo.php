@@ -1,6 +1,9 @@
  <?php
 
   $site="port";
+  
+  
+  ##Bug, jämförelse simulering går ej välja
 
 include 'config.php';
 include 'functions/port.php';

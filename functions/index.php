@@ -4,7 +4,7 @@
 
 ### Resolve name
 function indexResName($isin) {
-	$query="SELECT * FROM indexName 
+	$query="SELECT * FROM indexname 
 			WHERE ISIN = '$isin'";
 	$result=mysql_query($query) or die(mysql_error());;
 	$var = mysql_fetch_row($result);
@@ -15,7 +15,7 @@ function indexResName($isin) {
 }
 
 function indexGetRange($lowDate, $highDate, $indexID, $startValue, $weight) {
-	$query="SELECT * FROM `indexPrice`
+	$query="SELECT * FROM `indexprice`
 			WHERE ISIN = '$indexID'
 			AND date >= '$lowDate'
 			AND date <= '$highDate'";
@@ -28,7 +28,7 @@ function indexGetRange($lowDate, $highDate, $indexID, $startValue, $weight) {
 }
 
 function indexGetValue($date, $isin) {
-	$query="SELECT * FROM `indexPrice`
+	$query="SELECT * FROM `indexprice`
 			WHERE ISIN = '$isin'
 			AND date <= '$date'
 			ORDER BY date DESC
@@ -39,7 +39,7 @@ function indexGetValue($date, $isin) {
 }
 
 function indexGetList() {
-	$query="SELECT ISIN, name FROM indexName";
+	$query="SELECT ISIN, name FROM indexname";
 	$result=mysql_query($query) or die(mysql_error());;
 	$i = '0';
 

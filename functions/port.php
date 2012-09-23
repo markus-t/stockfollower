@@ -3,17 +3,17 @@
 ### Get a list of every paper between dates.
 function portGetStock($dateLow, $dateHigh, $user = '1') {
 	$output = array();
-	$query="SELECT stockID,SUM(quantity) AS totalBought FROM stockBought 
+	$query="SELECT stockID,SUM(quantity) AS totalBought FROM stockbought 
 			WHERE date <= '$dateHigh'
 			GROUP BY stockID;";
 	$result=mysql_query($query) or die(mysql_error());;
 	while($row = mysql_fetch_array($result)) {
-		$query="SELECT stockID,SUM(quantity) AS totalBought FROM stockBought 
+		$query="SELECT stockID,SUM(quantity) AS totalBought FROM stockbought 
 				WHERE date <= '$dateLow'
 				AND stockID = '$row[stockID]';";
 		$resultBought=mysql_query($query) or die(mysql_error());;
 
-		$query="SELECT stockID,SUM(quantity) AS totalSold FROM stockSold 
+		$query="SELECT stockID,SUM(quantity) AS totalSold FROM stocksold 
 				WHERE date <= '$dateLow'
 				AND stockID = '$row[stockID]';";
 		$resultSold=mysql_query($query) or die(mysql_error());;
@@ -35,35 +35,35 @@ function portGetStock($dateLow, $dateHigh, $user = '1') {
 } 
 
 function portGetStockTransactions($stockID, $date) {
-	$query=" SELECT stockBought.price,
-				stockBought.quantity AS quantity,
+	$query=" SELECT stockbought.price,
+				stockbought.quantity AS quantity,
 				date as date,
 				courtage,
 				'bought' AS action
-			FROM `stockBought`
-			WHERE stockBought.stockID    = $stockID
-			AND   stockBought.date      <= '$date'
-			UNION ALL SELECT stockSold.price AS price,
-				stockSold.quantity AS quantity,
+			FROM `stockbought`
+			WHERE stockbought.stockID    = $stockID
+			AND   stockbought.date      <= '$date'
+			UNION ALL SELECT stocksold.price AS price,
+				stocksold.quantity AS quantity,
 				date AS date,
 				courtage,
 				'sold' AS action
-			FROM `stockSold`
-			WHERE stockSold.stockID    = $stockID
-			AND   stockSold.date      <= '$date'";
+			FROM `stocksold`
+			WHERE stocksold.stockID    = $stockID
+			AND   stocksold.date      <= '$date'";
 	$result=mysql_query($query) or die(mysql_error());;
-	$listBoughtSold = array();
+	$listStockTransactions = array();
 	while($row = mysql_fetch_assoc($result)) 
-	$listBoughtSold[] = $row;
+	$listStockTransactions[] = $row;
 	
 	#If we have more than one element we need to make them in order.
-	if(count($listBoughtSold) > 1) {
-		foreach($listBoughtSold as $key => $row)
+	if(count($listStockTransactions) > 1) {
+		foreach($listStockTransactions as $key => $row)
 		$dates[$key]  = $row['date']; 	
-		array_multisort($dates, SORT_ASC, $listBoughtSold);
+		array_multisort($dates, SORT_ASC, $listStockTransactions);
 	}
 	
-	return $listBoughtSold;
+	return $listStockTransactions;
 }
 
 ### Get quantity, market value, what is rea and how much, reference SKV 332 edition 13.
@@ -78,9 +78,9 @@ function portGetQuantity($stockID, $date) {
 	"price"      => "0",
 	"rea"        => "0"); #Realisation
 
-	$listBoughtSold = portGetStockTransactions($stockID, $date);
+	$listStockTransactions = portGetStockTransactions($stockID, $date);
 
-	if($listBoughtSold) {
+	if($listStockTransactions) {
 		$current   = array(
 		'quantity' => '0', #Antal
 		'aprice'   => '0', #Totalt omkostnadsbelopp (Anskaffninspris)
@@ -88,7 +88,7 @@ function portGetQuantity($stockID, $date) {
 		'dprice'   => '0', #Försäljningspris 
 		);
 		
-		foreach($listBoughtSold as $arr) {
+		foreach($listStockTransactions as $arr) {
 			if($arr['action'] == 'bought') {
 				$output['aquantity'] += $arr['quantity'];
 				$current['quantity'] += $arr['quantity'];
@@ -128,7 +128,7 @@ function portGetDividend($lowDate, $highDate, $dividend) {
 }
 
 function portGetStockSpan($stockID, $user) {
-	$query="SELECT date FROM stockBought
+	$query="SELECT date FROM stockbought
 			WHERE stockID = $stockID
 			ORDER BY date ASC LIMIT 1;";
 	$result=mysql_query($query) or die(mysql_error());;
@@ -150,11 +150,11 @@ function portGetStockTransactionsOld($arr_stockID, $lowDate = '2000-01-01',$high
 			$qs .= "OR stockID = '" . $stockID . "'\n";
 		}
 	} 
-	$query="SELECT ID,date,quantity,price,'bought' AS info FROM stockBought 
+	$query="SELECT ID,date,quantity,price,'bought' AS info FROM stockbought 
 							$qs 
 							AND date > '$lowDate'
 							AND date < '$highDate'
-			UNION ALL SELECT ID,date,quantity,price,'sold' FROM stockSold 
+			UNION ALL SELECT ID,date,quantity,price,'sold' FROM stocksold 
 							$qs
 							AND date > '$lowDate'
 							AND date < '$highDate'
@@ -243,12 +243,12 @@ function portGetStockSummary($lowDate, $highDate, $stockID) {
 	$output['shortName'] = $name['shortName'];
 	$output['name']      = $name['name'];
 
-	$QuantityHigh = portGetQuantity($stockID, $highDate);
-	$output['q'] = $QuantityHigh['aquantity'] - $QuantityHigh['dquantity'];
-	$output['aprice'] = $QuantityHigh['aprice'];
+	$quantityHigh = portGetQuantity($stockID, $highDate);
+	$output['q'] = $quantityHigh['aquantity'] - $quantityHigh['dquantity'];
+	$output['aprice'] = $quantityHigh['aprice'];
 	
-	$QuantityLow = portGetQuantity($stockID, $lowDate);
-	$output['tq'] = $QuantityLow['aquantity'] - $QuantityLow['dquantity'];	
+	$quantityLow = portGetQuantity($stockID, $lowDate);
+	$output['tq'] = $quantityLow['aquantity'] - $quantityLow['dquantity'];	
 
 	$output['mvalue'] = $valueHigh['value'] * $output['q'];
 	$output['diravkkr'] =  portCacheGetDividendSum($lowDate, $highDate, $stockID);
@@ -271,15 +271,15 @@ function portGetStockSummary($lowDate, $highDate, $stockID) {
 
 ### Get activty of stock
 function portGetStockActivityOld($lowDate, $highDate, $stockID) {
-	$query="SELECT date,price,quantity,'bought' FROM `stockBought`
+	$query="SELECT date,price,quantity,'bought' FROM `stockbought`
 		WHERE stockID = '$stockID'
 		AND   date   >= '$lowDate'
 		AND   date   <= '$highDate'
-		UNION SELECT date,price,quantity,'sold' FROM `stockSold`
+		UNION SELECT date,price,quantity,'sold' FROM `stocksold`
 		WHERE stockID = '$stockID'
 		AND   date   >= '$lowDate'
 		AND   date   <= '$highDate'
-		UNION SELECT date,dividend AS price,'0','dividend' FROM `stockDividend`
+		UNION SELECT date,dividend AS price,'0','dividend' FROM `stockdividend`
 		WHERE stockID = '$stockID'
 		AND   date   >= '$lowDate'
 		AND   date   <= '$highDate'
@@ -293,7 +293,7 @@ function portGetStockActivityOld($lowDate, $highDate, $stockID) {
 
 ### Get actions att given date 
 function portGetStockAction($stockID, $date) {
-	$query="SELECT * FROM `stockBought`
+	$query="SELECT * FROM `stockbought`
 			WHERE stockID = '$stockID'
 			AND date = '$date'";
 	$output = array();
@@ -313,13 +313,13 @@ function portCacheDividendSum() {
 	foreach($output as $stockID) {
 		$dividend = stockGetDividendRange('2010-01-01', '2013-01-01', $stockID);
 		if(!empty($dividend)) {
-			##den det här ska bytas ut mot domnya type definitionera. Dividend type 2 calculations.
+			##den det här ska bytas ut mot dom nya type definitionera. Dividend type 2 calculations.
 			if( $stockID <= 999) {
 				foreach($dividend as $key){
 					$tmValue = 0;
 					$qAtDividend = portGetQuantity($stockID, $key['date']);
 					$tmValue = $key['dividend'] * $qAtDividend['quantity'] ;
-					$query="REPLACE INTO cDividendSum 
+					$query="REPLACE INTO cdividendsum 
 							VALUES ( '$stockID', '$key[date]', '$tmValue' )";
 					$result=mysql_query($query) or die(mysql_error());;
 				} 
@@ -337,7 +337,7 @@ function portCacheDividendSum() {
 					$qAtDividend  = portGetQuantity($stockID, $fromTime);
 					
 					$dividendSum = (($interest / 100) / $daysInBankYear) * $qAtDividend['quantity'] ;
-					$query="REPLACE INTO cDividendSum 
+					$query="REPLACE INTO cdividendsum 
 									VALUES ( '$stockID', '$fromTime', '$dividendSum' )";
 					$result=mysql_query($query) or die(mysql_error());;
 					
@@ -352,7 +352,7 @@ function portCacheDividendSum() {
 }
 
 function portCacheGetDividendSum($lowDate, $highDate, $stockID) {
-	$query="SELECT SUM(sum) as sum FROM `cDividendSum`
+	$query="SELECT SUM(sum) as sum FROM `cdividendsum`
 		WHERE ID = '$stockID'
 		AND date <= '$highDate'
 		AND date > '$lowDate'";
@@ -364,59 +364,57 @@ function portCacheGetDividendSum($lowDate, $highDate, $stockID) {
 
 function portCacheHoldingSum() {
 	$span = portGetStock('2000-01-01', '2015-01-01', '1');
-	$fT = '2011-05-01';
-	$tT = '2013-01-01';
-	$aAm = "0";
-	$mAm = "0";
-	$i = '0';
-	$FROM = '2011-05-01';
-	$TO = '2013-01-01';
-	$av  = '+1 day';
+	$aAm      = "0";
+	$mAm      = "0";
+	$i        = '0';
+	$fromTime = '2011-05-01';
+	$toTime   = '2013-01-01';
+	$av       = '+1 day';
 
 	foreach($span as $key) 
-	while($fT <= $tT) {
+	while($fromTime <= $toTime) {
 		$totAm = '0';
 		foreach($span as $key) {
 			$rea = '0';
-			$Quantity = portGetQuantity($key, $fT);
-			$Value    = stockGetValue($key, $fT);
-			$output['q'] = $Quantity['quantity'];
-			$output['aprice'] = $Quantity['aprice'];
+			$quantity = portGetQuantity($key, $fromTime);
+			$Value    = stockGetValue($key, $fromTime);
+			$output['q'] = $quantity['quantity'];
+			$output['aprice'] = $quantity['aprice'];
 			$output['mValue'] = $Value['value'];
-			$output['tmValue'] = $Value['value'] * $Quantity['quantity'];
-			$output['taValue'] = $Quantity['aprice'] * $Quantity['quantity'];
+			$output['tmValue'] = $Value['value'] * $quantity['quantity'];
+			$output['taValue'] = $quantity['aprice'] * $quantity['quantity'];
 
 			$output['utv'] = $output['tmValue'] - $output['taValue']; 
 			
-			$output['diravk']   =  portCacheGetDividendSum('2010-01-01', $fT, $key);
+			$output['diravk']   =  portCacheGetDividendSum('2010-01-01', $fromTime, $key);
 			$output['tmValue'] +=  $output['diravk'];
 
-			$output['date'] = $fT;
+			$output['date'] = $fromTime;
 
-			$query = "REPLACE INTO cHoldingSum 
+			$query = "REPLACE INTO choldingsum 
 						VALUES ('$key', 
-								'$fT',
+								'$fromTime',
 								'$output[aprice]', 
 								'$output[mValue]', 
 								'$output[tmValue]', 
 								'$output[taValue]', 
 								'$output[utv]',
-								'$Quantity[rea]',
+								'$quantity[rea]',
 								'$output[diravk]')";
 			$result=mysql_query($query) or die(mysql_error());;
 			$totAm += $output['utv'];
 		}
 		$var[$i]['utv'] = $totAm;
-		$var[$i]['date'] = $fT;
+		$var[$i]['date'] = $fromTime;
 		$i++;
-		$fT = strtotime ( $av , strtotime ($fT) );
-		$fT = date ( 'Y-m-d' , $fT ); 
+		$fromTime = strtotime ( $av , strtotime ($fromTime) );
+		$fromTime = date ( 'Y-m-d' , $fromTime ); 
 	}
 	return 1;
 }
 
 function portCacheGetHoldingSum($date, $stockID) {
-	$query="SELECT * FROM cHoldingSum
+	$query="SELECT * FROM choldingsum
 			WHERE date    = '$date'
 			AND   stockID = '$stockID'";
 	$result=mysql_query($query) or die(mysql_error());;
@@ -426,7 +424,7 @@ function portCacheGetHoldingSum($date, $stockID) {
 }
 
 function portCreateTempTableHoldingSum() {
-	$query="CREATE TEMPORARY TABLE cHoldingSum
+	$query="CREATE TEMPORARY TABLE choldingsum
 	(
 		stockID   int,
 		date      date,
@@ -441,7 +439,7 @@ function portCreateTempTableHoldingSum() {
 }
 
 function portCreateTempTableDividendSum() {
-	$query="CREATE TEMPORARY TABLE cDividendSum
+	$query="CREATE TEMPORARY TABLE cdividendsum
 	(
 		ID     int,
 		date   date,

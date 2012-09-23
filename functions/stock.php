@@ -5,7 +5,7 @@
 
 ### Resolve name
 function stockResName($stockID) {
-	$query="SELECT * FROM stockName 
+	$query="SELECT * FROM stockname 
 		WHERE ID = $stockID";
 	$result=mysql_query($query) or die(mysql_error());;
 	$var = mysql_fetch_row($result);
@@ -19,7 +19,7 @@ function stockResName($stockID) {
 ### Resovle type
 function stockGetType($stockID) {
 	$query="
-	SELECT type from stockName 
+	SELECT type from stockname 
 	WHERE ID = '$stockID' ;";
 	$r=mysql_query($query) or die(mysql_error());;
 	$output = mysql_fetch_row($r);
@@ -32,10 +32,10 @@ function stockGetValue($stockID, $date) {
 	"ID"     => $stockID,
 	"date"   => "0",
 	"value"  => "0");
-	$query="SELECT date, price,'2' AS priority FROM `stockPrice`
+	$query="SELECT date, price,'2' AS priority FROM `stockprice`
 			WHERE stockID = '$stockID'
 			AND   date <= '$date'
-	UNION SELECT date, price,'1' AS priority FROM `stockBought`
+	UNION SELECT date, price,'1' AS priority FROM `stockbought`
 			WHERE stockID = '$stockID'
 			AND   date <= '$date'
 			ORDER BY date DESC, priority LIMIT 1";
@@ -52,7 +52,7 @@ function stockGetValue($stockID, $date) {
 
 ### Get a range of dividends in given range. 
 function stockGetDividendRange($lowDate, $highDate, $stockID) {
-	$query="SELECT dividend, date, stockID FROM `stockDividend`
+	$query="SELECT dividend, date, stockID FROM `stockdividend`
 	WHERE stockID = '$stockID'
 	AND date >= '$lowDate'
 	AND date <= '$highDate'";

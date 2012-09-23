@@ -43,7 +43,7 @@ margin: 0;
 #navigation li a {
   display: block;
   float: left;
-  padding: 5px 15px;
+  padding: 2px 10px;
   color: #fff;
   text-decoration: none;
   border-right: 1px solid #999;
@@ -55,7 +55,7 @@ margin: 0;
 
 #menu_right {
   float:right;
-  margin: 0;
+  margin: 4px;
   padding:0;
 }
 
