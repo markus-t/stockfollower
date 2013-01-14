@@ -35,7 +35,7 @@ INSERT INTO `indexname` (`ISIN`, `name`) VALUES
 --
 
 INSERT INTO `stockname` (`ID`, `shortName`, `Name`, `type`, `rss`) VALUES
-(1, 'SCA B', 'Svenska Cellulosa Aktiebolaget SCA (publ)', 1, ''),
+(2, 'Axfood', 'Axfood', 1, 'http://www.cisionwire.se/axfood/rss/all-information/'),
 (5, 'Avanza Zero', 'Avanza Zero', 1, ''),
 (10, 'RB STENA N', 'RB STENA N', 1, ''),
 (1000, 'Hoist Spar', 'Hoist Spar', 3, '');
@@ -45,7 +45,7 @@ INSERT INTO `stockname` (`ID`, `shortName`, `Name`, `type`, `rss`) VALUES
 --
 
 INSERT INTO `stockbought` (`ID`, `date`, `stockID`, `quantity`, `price`, `courtage`) VALUES
-(1, '2011-06-30', 1, 150.000000, 88.80000, 0.00),
+(1, '2011-12-19', 2, 150.000000, 248.9000, 0.00),
 (2, '2012-02-28', 5, 100.000000, 117.68000, 0.00),
 (39, '2011-05-26', 1000, 65046.000000, 1.00000, 0.00),
 (40, '2011-06-17', 1000, 9954.000000, 1.00000, 0.00),

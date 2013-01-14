@@ -20,9 +20,6 @@ SET time_zone = "+00:00";
 -- Databas: `stock`
 --
 
-CREATE DATABASE `stock` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
-USE `stock`;
-
 
 -- --------------------------------------------------------
 

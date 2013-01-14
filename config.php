@@ -11,7 +11,7 @@ $dbSettings = array(
 	'host' 		=> "localhost",
 	'username'	=> "root",
 	'password'	=> "",
-	'database'	=> "stock",
+	'database'	=> "gittest",
 	'charset'	=> "utf8");
 	
 $con = mysql_connect($dbSettings['host'],$dbSettings['username'],$dbSettings['password']);  	
@@ -63,8 +63,8 @@ $daysInBankYear = 365;
 #Link to nordet, morningstar and avanza. Multidimensional array.
 $fetch_nordnet = 
   array(
-    array('stockID' => 1,
-	      'link'    => 'https://www.nordnet.se/mux/laddaner/historikLaddaner.ctl?isin=SE0000112724&country=Sverige')); 
+    array('stockID' => 2,
+	      'link'    => 'https://www.nordnet.se/mux/laddaner/historikLaddaner.ctl?isin=SE0000635401&country=Sverige')); 
 
 
 $fetch_morningstar = 
