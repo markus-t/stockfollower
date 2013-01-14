@@ -168,10 +168,11 @@ function portGetStockTransactionsOld($arr_stockID, $lowDate = '2000-01-01',$high
 
 ### Simulate index graph based on array of transactions
 function portSimIndex($transactions, $indexID) {
+	global $ENDDATE;
 	$output  		= array();
 	$a       		= '0';
 	$fromTime      	= '2000-01-01';
-	$toTime      	= '2013-01-01';
+	$toTime      	= $ENDDATE;
 	$marketValue  	= '0';
 	$acquireValue  	= '0';
 	$quantity       = '0';
@@ -262,9 +263,9 @@ function portGetStockSummary($lowDate, $highDate, $stockID) {
 	$output['tprice'] = $output['mvalue'] - $output['utvkr'];
 
 	if( '0' <> $output['utvkr'] || '0' <> $output['mvalue'] || $output['utvkr'] != '0')
-	@$output['utv'] = (($output['utvkr'] + $output['diravkkr'] +  $output['rea'] )/ $output['mvalue']) * 100;
+	  @$output['utv'] = (($output['utvkr'] + $output['diravkkr'] +  $output['rea'] )/ $output['mvalue']) * 100;
 	else
-	$output['utv'] = '0';
+	  $output['utv'] = '0';
 
 	return $output;
 }
@@ -287,7 +288,7 @@ function portGetStockActivityOld($lowDate, $highDate, $stockID) {
 	$output = array();
 	$result=mysql_query($query) or die(mysql_error());;
 	while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) 
-	$output[] = $row;
+	  $output[] = $row;
 	return $output;
 }
 
@@ -309,9 +310,10 @@ function portGetStockAction($stockID, $date) {
 function portCacheDividendSum() {
 	mysql_query("BEGIN");
 	global $daysInBankYear;
-	$output = portGetStock('2011-05-01', '2013-01-01', "1");
+	global $ENDDATE;
+	$output = portGetStock('2011-05-01', $ENDDATE, "1");
 	foreach($output as $stockID) {
-		$dividend = stockGetDividendRange('2010-01-01', '2013-01-01', $stockID);
+		$dividend = stockGetDividendRange('2010-01-01', $ENDDATE, $stockID);
 		if(!empty($dividend)) {
 			##den det här ska bytas ut mot dom nya type definitionera. Dividend type 2 calculations.
 			if( $stockID <= 999) {
@@ -326,7 +328,7 @@ function portCacheDividendSum() {
 				### Dividend type 1 calculations
 			} else {
 				$fromTime    = $dividend['0']['date'];
-				$toTime      = '2013-01-01';
+				$toTime      = $ENDDATE;
 				$dividendKey = 0;
 				$dividendSum = 0;
 				while ($fromTime < $toTime) {
@@ -363,12 +365,13 @@ function portCacheGetDividendSum($lowDate, $highDate, $stockID) {
 }
 
 function portCacheHoldingSum() {
-	$span = portGetStock('2000-01-01', '2015-01-01', '1');
+	global $ENDDATE;
+	$span = portGetStock('2000-01-01', $ENDDATE, '1');
 	$aAm      = "0";
 	$mAm      = "0";
 	$i        = '0';
 	$fromTime = '2011-05-01';
-	$toTime   = '2013-01-01';
+	$toTime   = $ENDDATE;
 	$av       = '+1 day';
 
 	foreach($span as $key) 

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 #Error reporting
 error_reporting(E_ALL ^ E_STRICT);
@@ -7,20 +7,17 @@ error_reporting(E_ALL ^ E_STRICT);
 ini_set('display_errors', '1');
 
 #Mysql host, username and password.
-$con = mysql_connect("localhost","root","");
-
-#check connection to Mysql
-if(!$con)
-  die('Could not connect: ' . mysql_error());
-    
+$dbSettings = array( 
+	'host' 		=> "localhost",
+	'username'	=> "root",
+	'password'	=> "",
+	'database'	=> "stock",
+	'charset'	=> "utf8");
+	
+$con = mysql_connect($dbSettings['host'],$dbSettings['username'],$dbSettings['password']);  	
+	
 #Timezone
 date_default_timezone_set('Europe/Berlin');
-
-#database to use
-mysql_select_db("stocktest", $con) or die(mysql_error());;
-
-#charset to use
-mysql_set_charset('utf8');
 
 #Allow to store big blobs
 $query = ( 'SET @@global.max_allowed_packet = ' . 100 * 1024 * 1024 );
@@ -28,6 +25,15 @@ $result=mysql_query($query);
 
 #Todays date
 $TODAY = date("Y-m-d");
+
+#Yesterday
+$YESTERDAY = date('Y-m-d',strtotime ( '-1 day' , strtotime ($TODAY) ) );
+
+#Future
+$ENDDATE = date('Y-m-d',strtotime ( '+28 day' , strtotime ($TODAY) ) );
+
+#Active from
+$STARTDATE = '2010-01-01';
 
 #Allow script to run a long time to finish updates
 set_time_limit(200);
@@ -52,25 +58,40 @@ $stockProperties =
 		  
 
 #How many days to calculate intereset on.
-$daysInBankYear = 360;
+$daysInBankYear = 365;
 
 #Link to nordet, morningstar and avanza. Multidimensional array.
 $fetch_nordnet = 
   array(
-    array('stockID' => 2,
-  	      'link'    => 'https://www.nordnet.se/mux/laddaner/historikLaddaner.ctl?isin=SE0000635401&country=Sverige'),
-  ); 
+    array('stockID' => 1,
+	      'link'    => 'https://www.nordnet.se/mux/laddaner/historikLaddaner.ctl?isin=SE0000112724&country=Sverige')); 
+
 
 $fetch_morningstar = 
   array( 
     array('stockID' => 5,
-	      'link'    => 'http://morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P00005U1J&programid=0000000000'),
-  ); 
+	      'link'    => 'http://morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P00005U1J&programid=0000000000') );
 
-$fetch_avanza = 
-  array( 
-    array('stockID' => 2,
-	      'link'    => 'https://www.avanza.se/aza/aktieroptioner/kurslistor/aktie.jsp?orderbookId=216967'),
-    ); 
+  
+
+
+#check connection to Mysql
+if(!$con)
+  die('Could not connect: ' . mysql_error());
+
+#database to use
+mysql_select_db($dbSettings['database'], $con) or die(mysql_error());;
+
+#charset to use
+mysql_set_charset('utf8');
+
+if(isset($_POST['stockList'])) {
+  $stockList = $_POST['stockList'];
+  $_SESSION['stockList'] = $stockList;
+} else if (isset($_SESSION['stockList'])) {
+  $stockList = $_SESSION['stockList'];
+} 
+
+
 
 ?>

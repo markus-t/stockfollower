@@ -15,9 +15,10 @@ include 'pageTop.php';
 
 
 
-if(!isset($_POST['up']) && !isset($_POST['sumV']) && !isset($_POST['sumD']) && !isset($_POST['updateRss'])) {
+if(!isset($_POST['up']) && !isset($_POST['sumV']) && !isset($_POST['sumD']) && !isset($_POST['updateRss']) && !isset($_POST['backupDb'])) {
 ?>
-
+<h2>Data</h2>
+<hr />
 <form name="update" action="./update.php" method="post">
   <input type="checkbox" name="AVA" value="Bike" checked="checked" class="radio"/>Avanza<br />
   <input type="checkbox" name="MS" value="Bike" checked="checked" />Morningstar<br />
@@ -26,29 +27,42 @@ if(!isset($_POST['up']) && !isset($_POST['sumV']) && !isset($_POST['sumD']) && !
   <input type="checkbox" name="sumD" value="Bike" checked="checked" />Summering Utdelning<br />
   <input type="checkbox" name="sumV" value="Bike" checked="checked" />Summering Värde<br />
   <br />
-  <input type="checkbox" name="updateRss" value="Bike" checked="checked" />Pressmedelanden<br />
+  <input type="checkbox" name="updateRss" value="Bike" />Pressmedelanden<br />
   <br />
   <input type="submit" name="up" value="Kör manuell uppdatering">
 </form> 
 
-<hr />
-<br />
 
 <form name="update1" action="./update.php" method="post">
   <input type="submit" name="sumD" value="Uppdatera tabell för utdelning">
 </form> 
 
-<br />
 <form name="update2" action="./update.php" method="post">
   <input type="submit" name="sumV" value="Uppdatera tabell för summa">
 </form> 
 
-<hr />
-
-<br />
 <form name="updateRss" action="./update.php" method="post">
   <input type="submit" name="updateRss" value="Uppdatera RSS">
-</form> <!--
+</form> 
+
+<hr />
+<h2>Databashantering<h2>
+
+<form name="backupDb" action="./update.php" method="post">
+  <input type="submit" name="backupDb" value="Backup av databas">
+</form> 
+<form name="reloadDb" action="./update.php" method="post">
+  <input type="file" name="reloadDb" value="Backup av databas">
+  <input type="submit" name="reloadDb" value="Återställ från tidigare backup">
+</form> 
+<h3>Användaruppgifter till databas</h3>
+<form name="credDb" action="./update.php" method="post">
+  <input type="text" name="username" value="Användarnam">
+  <input type="text" name="password" value="Lösenord">
+  <input type="submit" name="updateDb" value="OK">
+</form> 
+
+<!--
 <hr \>
 
 <br>
@@ -84,7 +98,12 @@ if(isset($_POST['MS'])) {
 if(isset($_POST['AVA'])) {
   echo "AVANZA:";
   sysFlush_page();
-  if(updateAvanza($fetch_avanza))
+  $query = "SELECT stockID, link FROM updateavanza";
+  $result=mysql_query($query) or die(mysql_error());;
+  while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) 
+     $output[$row['stockID']] = $row['link'];
+
+  if(updateAvanza($output))
     echo "<span style=\"color: green\"> OK</span>";
   echo '<br />';
 }
@@ -126,6 +145,8 @@ if(isset($_POST['updateRss'])) {
 }
 
 
+
+
 echo "Kör uppdateringsordrar databas:";
 sysFlush_page();
 if(mysql_query("COMMIT")) 
@@ -133,6 +154,15 @@ if(mysql_query("COMMIT"))
 else
     echo "<span style=\"color: red\"> INTE OK</span>";
 echo '<br />';
+	
+if(isset($_POST['backupDb'])) {
+  echo "Uppdatering RSS:";
+  sysFlush_page();
+  $array = rssGetList();
+  if($var = mysql_dump('stock'))
+    echo mysql_dump('stock');	
+  echo '<br />';
+}
 	
 
 echo "<br /><br /> KLART!";

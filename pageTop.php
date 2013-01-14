@@ -28,7 +28,7 @@ if(!empty($_GET['to']) && !empty($_GET['from'])){
 #Standard dates.
 } else {
   $TO   = $TODAY;
-  $FROM = "2012-01-01";
+  $FROM = "2013-01-01";
 }
 
 if(strtotime($TO)   > strtotime($TODAY)) 
@@ -69,16 +69,6 @@ if(isset($_GET['stock'])) {
   $stockID = $_GET['stock'];
 }
 
-if(isset($_POST['stockList'])) {
-  $stockList = $_POST['stockList'];
-  $_SESSION['stockList'] = $stockList;
-} else if (isset($_SESSION['stockList'])) {
-  $stockList = $_SESSION['stockList'];
-} 
-
-
-
-
 
 
 ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -89,6 +79,9 @@ if(isset($_POST['stockList'])) {
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="icon" href="http://192.168.0.101/stock/favicon.ico" type="image/vnd.microsoft.icon" />
     <script type="text/javascript" src="js/jsapi"></script>
+	<script type="text/javascript">
+      google.load('visualization', '1', {packages: ['corechart']});
+    </script>
     <script type="text/javascript" src="js/sorttable.js"></script>
     <link rel="stylesheet" href="css/design.css" type="text/css" />
     <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
@@ -187,13 +180,17 @@ if(isset($_POST['stockList'])) {
 
  	  });
     </script>
-
+<script>
+function load(num){
+   $("#LoadMe").load('ig.php');
+}
+</script>
   </head>
   <body>
 
 <?php
 if(empty($stockList)) {
-  $stockList = portGetStock('2010-01-01', '2015-01-01', "1");
+  $stockList = portGetStock('2010-01-01', $ENDDATE, "1");
 }
 ?>
 
@@ -220,6 +217,25 @@ if(empty($stockList)) {
 
 
 <?php
+
+$totvalue = 0;
+$d = portGetStock('2011-05-01', $TODAY);
+foreach ($d as $key) {
+  $data = portCacheGetHoldingSum($TODAY, $key);
+  $totvalue += $data['tmValue'] - $data['diravk'];
+}
+
+$totvalue2 = 0;
+$d = portGetStock('2011-05-01', $YESTERDAY);
+foreach ($d as $key) {
+  $data = portCacheGetHoldingSum($YESTERDAY, $key);
+  $totvalue2 += $data['tmValue'] - $data['diravk'];
+}
+
+echo 'Sedan igår:';
+echo number_format((@($totvalue / $totvalue2) - 1) * 100, 2, ',', ' ');
+echo '%';
+
 if(rssIsUnread()) {
   echo '<a href="rss.php" class="menuObjectRight"><img src="img/unread.png" style="padding-right: 10px; margin: 0px;" width="22px" alt="D"/></a>';
 }

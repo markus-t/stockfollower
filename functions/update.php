@@ -10,7 +10,8 @@ function updateNordnet($fetch) {
 	foreach($fetch as $address) {
 		$file = file($address['link']);
 		foreach(array_filter($file, "updateFilter") as $line){
-			$reg = "/(2012-[0-9]{2}-[0-9]{2})[\s]([0-9]+,[0-9]+)/";
+		###BUG
+			$reg = "/(201[0-9]-[0-9]{2}-[0-9]{2})[\s]([0-9]+,[0-9]+)/";
 			preg_match ($reg, $line, $matches);
 			if(!empty($matches)) {
 				$matches['2'] = preg_replace("/,/", ".", $matches['2']);
@@ -60,16 +61,16 @@ function updateAvanza($fetch) {
 	} else {
 		return("tiden är utanför tillåten tid (AVANZA)");
 	}
-	foreach($fetch as $address) {
-		$file = file_get_contents($address['link']);
+	foreach($fetch as $stockID => $link) {
+		$file = file_get_contents($link);
 		$reg = '/>[A-Za-z .]*<\/td><td nowrap class="(winner|looser|neutral)">[\-\+]*[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">[\-\+]*[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">([0-9]+,[0-9]+)<\/td>/';
 		preg_match ($reg, $file, $matches);
 
 		if(!empty($matches)) {
-			# Ersätt komma med punkt.
+			# Replace dot with comma
 			$matches['6'] = preg_replace("/,/", ".", $matches['6']);
 			$query = "REPLACE INTO stockprice (date, price, stockID)
-						VALUES ('$date', '$matches[6]', '$address[stockID]')";
+						VALUES ('$date', '$matches[6]', '$stockID')";
 			$output .= $query . "\n";
 			$result=mysql_query($query) or die(mysql_error());;
 		}  
@@ -161,7 +162,6 @@ function updateNasdaq($toDate) {
 	} 
 	return true;
 }
-
 
 
 ?>

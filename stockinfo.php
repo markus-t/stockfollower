@@ -1,8 +1,5 @@
- <?php
-
+<?php
   $site="port";
-  
-  
   ##Bug, jämförelse simulering går ej välja
 
 include 'config.php';
@@ -26,7 +23,7 @@ $startdate = $date['0'];
  <?php
 $output = portGetStock($FROM, $TO, "1");
 $output2 = portGetStockSummary('2000-01-01', $TODAY, $stockID);
-    echo '<table width="28%" style="float: left;">';
+    echo '<table width="28%" style="float: left;" >';
     echo '<caption style="text-align: left; font-size:15px;">Data</caption>';
     echo "<tr>";
 	echo '<th style="text-align:left;">Namn</th>';
@@ -68,13 +65,25 @@ $output2 = portGetStockSummary('2000-01-01', $TODAY, $stockID);
 	echo '<th style="text-align:left;">Realiserad s:a</th>';
 	echo "<td>".number_format($output2['rea'], 0, ',', ' ')."</td>";
 	echo "</tr>";
+	echo "<tr>";
+	echo '<th style="text-align:left;">Uppdatering Avanza</th>';
+	echo "<td>Ja</td>";
+	echo "</tr>";
+	echo "<tr>";
+	echo '<th style="text-align:left;">Uppdatering Morningstar</th>';
+	echo "<td>Ja</td>";
+	echo "</tr>";
+	echo "<tr>";
+	echo '<th style="text-align:left;">Uppdatering Nordnet</th>';
+	echo "<td>Ja</td>";
+	echo "</tr>";
     echo "</table>";
 
  ?>
  	
 
 
-<table width="68%" style="float: right"> 
+<table width="68%" style="float: right" class="sortable"> 
 <caption style="text-align: left; font-size:15px;">Historik</caption>
     <tr>
 	<th width="10px">ID</th>
@@ -252,7 +261,15 @@ if($compareToIndex) {
 
   $out = rssReadStockID($stockID);
   if(!empty($out)) {
-    echo '<table width="100%"><caption style="text-align: left; font-size:15px;">Pressmedelanden</caption>';
+  ?>
+<table width="100%" class="sortable">
+<tr class="row">
+<th style="text-align: left;">Datum</th>
+<th style="text-align: left;">Titel</th>
+<th style="text-align: left;">Länk</th>
+
+</tr>	<?php
+
     foreach($out as $each) {
       $stockName = stockResName($each['stockID']);
       echo "<tr>";
@@ -264,7 +281,7 @@ if($compareToIndex) {
       if($each['new'] == '1')
         echo '</b>';
       echo '</td>';
-      echo '<td style="text-align:left;"> <a href="' . $each['link'] . '">LäNK</a>';
+      echo '<td style="text-align:left;"> <a href="' . $each['link'] . '">LÄNK</a>';
       echo '</td>';
 
       echo '</tr>';

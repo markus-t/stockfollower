@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 3.5.1
+-- version 3.5.2.2
 -- http://www.phpmyadmin.net
 --
--- Värd: localhost
--- Skapad: 09 sep 2012 kl 04:49
--- Serverversion: 5.5.24-log
--- PHP-version: 5.4.3
+-- Värd: 127.0.0.1
+-- Skapad: 14 jan 2013 kl 19:07
+-- Serverversion: 5.5.27
+-- PHP-version: 5.4.7
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -17,10 +17,12 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8 */;
 
 --
--- Databas: `stocktest`
+-- Databas: `stock`
 --
-CREATE DATABASE `stocktest` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
-USE `stocktest`;
+
+CREATE DATABASE `stock` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
+USE `stock`;
+
 
 -- --------------------------------------------------------
 
@@ -97,7 +99,7 @@ CREATE TABLE IF NOT EXISTS `rss` (
   `pdf` mediumblob NOT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `stockID` (`stockID`,`pubDate`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_swedish_ci AUTO_INCREMENT=157 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_swedish_ci AUTO_INCREMENT=272 ;
 
 -- --------------------------------------------------------
 
@@ -114,7 +116,7 @@ CREATE TABLE IF NOT EXISTS `stockbought` (
   `courtage` decimal(5,2) NOT NULL DEFAULT '0.00',
   PRIMARY KEY (`ID`),
   KEY `fk_stockID` (`stockID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=76 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=95 ;
 
 -- --------------------------------------------------------
 
@@ -129,7 +131,7 @@ CREATE TABLE IF NOT EXISTS `stockdividend` (
   `dividend` decimal(12,9) NOT NULL,
   PRIMARY KEY (`ID`),
   KEY `fk_stockID4` (`stockID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2044 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2054 ;
 
 -- --------------------------------------------------------
 
@@ -145,7 +147,7 @@ CREATE TABLE IF NOT EXISTS `stockname` (
   `rss` varchar(150) COLLATE utf8_swedish_ci NOT NULL DEFAULT '',
   PRIMARY KEY (`ID`),
   KEY `ID` (`ID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_swedish_ci AUTO_INCREMENT=1004 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_swedish_ci AUTO_INCREMENT=2001 ;
 
 -- --------------------------------------------------------
 
@@ -176,7 +178,21 @@ CREATE TABLE IF NOT EXISTS `stocksold` (
   `courtage` decimal(5,2) NOT NULL DEFAULT '0.00',
   PRIMARY KEY (`ID`),
   KEY `fk_stockID2` (`stockID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=24 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=40 ;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellstruktur `updateavanza`
+--
+
+CREATE TABLE IF NOT EXISTS `updateavanza` (
+  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `stockID` int(11) unsigned NOT NULL,
+  `link` varchar(256) NOT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `fk.stockID4` (`stockID`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=7 ;
 
 --
 -- Restriktioner för dumpade tabeller
@@ -212,7 +228,12 @@ ALTER TABLE `stockprice`
 ALTER TABLE `stocksold`
   ADD CONSTRAINT `fk_stockID2` FOREIGN KEY (`stockID`) REFERENCES `stockname` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
+--
+-- Restriktioner för tabell `updateavanza`
+--
+ALTER TABLE `updateavanza`
+  ADD CONSTRAINT `fk.stockID4` FOREIGN KEY (`stockID`) REFERENCES `stockname` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-

@@ -2,12 +2,13 @@
 
 $site="rss";
 
-include 'functions/rss.php';
+include 'config.php';
 include 'functions/port.php';
 include 'functions/stock.php';
 include 'functions/index.php';
+include 'functions/rss.php';
 include 'functions/sys.php';
-include 'config.php';
+
 
 # Download PDF set.
 if(isset($_GET['pdf'])) {
@@ -24,8 +25,17 @@ include 'pageTop.php';
 
 if(!isset($_GET['load'])) {
 	$out = rssReadAll();
+	
+?>
+<table width="100%" class="sortable">
+<tr class="row">
+<th style="text-align: left;">Datum</th>
+<th style="text-align: left;">Bolag</th>
+<th style="text-align: left;">Titel</th>
+<th style="text-align: left;">Länk</th>
 
-	echo '<table width="100%">';
+</tr>	<?php	
+
 	foreach($out as $each) {
 		$stockName = stockResName($each['stockID']);
 		echo "<tr>";

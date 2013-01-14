@@ -75,12 +75,13 @@ include 'pageTop.php';
 	      $sum['tprice']  += $output2['tprice'] ;
 	      $sum['diravkkr']  += $output2['diravkkr'] ;
 	      $sum['rea']  += $output2['rea'] ;
-	
-  	      $arr[] = array(
-	         "shortName" => $output2['shortName'],
-	         "mvalue"    => round($output2['mvalue']) );
+          #Quick fix for loans and stuff
+		  if ($output2['mvalue'] > 0) {
+    	      $arr[] = array(
+	           "shortName" => $output2['shortName'],
+	           "mvalue"    => round($output2['mvalue']) );
 	      }
-	  
+	     }
         echo "  <tfoot>\n ";
         echo "    <tr>\n";
 	    echo "      <td colspan=\"3\" style=\"text-align: left;\">Totalt</td>\n"; 
@@ -101,8 +102,9 @@ include 'pageTop.php';
   echo $nodata;
  ?>
 
-  <div id="utv" class="chart" style="width: 100%; height: 220px; float: right; margin: 10px 0 0 0; z-index:1;"></div>
-  <div id="chart_div" style="width: 800px; height: 450px; "></div>
+  <div id="utv" class="chart" style="width: 100%; height: 220px; margin: 10px 0 0 0; z-index:1;"></div>
+  <div id="visualization" class="chart" style="width: 100%; height: 400px; margin: 10px 0 0 0; z-index:1;"></div>	
+  <div id="chart_div" style="width: 800px; height: 400px; "></div>
   <?php sysFlush_page();  ?>
     <script type="text/javascript">
       google.load("visualization", "1", {packages:["corechart"]});
@@ -124,7 +126,8 @@ include 'pageTop.php';
         ?>]);
 
         var options = {
-          title: 'Utgående fördelning'
+          title: 'Utgående fördelning investeringar',
+		  chartArea:{left:80,top:40, bottom:0, height:"75%"}
         };
 
         var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
@@ -143,10 +146,18 @@ include 'pageTop.php';
   $i = '0';
 
   $var = array();
-  if(strtotime($FROM) <= strtotime('-365 days', strtotime($TO))) {
+  if(strtotime($FROM) <= strtotime('-2 year', strtotime($TO))) {
+    $av  = '+3 day';
+	$ig  = '+10 day';
+  } else if(strtotime($FROM) <= strtotime('-1 year', strtotime($TO))) {
     $av  = '+2 day';
+	$ig  = '+4 days';
+  } else if(strtotime($FROM) <= strtotime('-10 week', strtotime($TO))) {
+    $av  = '+1 day';
+	$ig  = '+2 day';
   } else {
     $av  = '+1 day';
+	$ig  = '+1 day';
   }
   $temp_var['utv'] = '0';
   foreach($stockList as $key) {
@@ -224,14 +235,84 @@ include 'pageTop.php';
 
         var options = {
          title: 'Utveckling',
-		 annotation: {'1': {style: 'letter'}}
+		 annotation: {'1': {style: 'letter'}},
+		 chartArea:{left:80,top:40, bottom:0, height:"75%"},
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('utv'));
         chart.draw(data, options);
       }
     </script>
+<?php
+	### First column with names
+$output = "[
+            ['Datum'";
+foreach ($stockList as $key => $stockID) {
+  if ($stockID < 1003 or 1006 < $stockID) {
+	  $name = stockResName($stockID);
+	  $output .= ", '";
+	  $output .= $name['shortName'];
+	  $output .= "'";
+  }
+}  
+$output .= "], \n";
 
+$fromTime = $FROM;
+while (strtotime($fromTime) <= strtotime($TODAY)) {
+	$output .= "[";	
+	$output .= "'";
+	$output .= $fromTime;
+	$output .= "'";
+		
+	$first = false;
+	foreach ($stockList as $key => $stockID) {
+	  if ($stockID < 1003 or 1006 < $stockID) {
+		  $portGetQuantity = portGetQuantity($stockID, $fromTime);
+		  $price = stockGetValue($stockID, $fromTime);
+		  $marketValue = $portGetQuantity['quantity'] * $price['value'];
+		  
+		  if ($first == true) {
+			$first = false;
+		  } else {
+			$output .= ",";
+		  }
+		  $output .= round($marketValue);
+	  }
+	}
+	$output .= "],";
+  $fromTime = date('Y-m-d',strtotime ( $ig , strtotime ($fromTime) ) );
+}
+
+
+$output .= "]";
+?>
+	
+    <script type="text/javascript">
+      function drawVisualization() {
+        // Some raw data (not necessarily accurate)
+        var data = google.visualization.arrayToDataTable(<?php echo $output ?>);
+      
+        // Create and draw the visualization.
+        var ac = new google.visualization.AreaChart(document.getElementById('visualization'));
+        ac.draw(data, {
+          title : 'Investerat kapital över tid',
+          isStacked: true,
+		  chartArea:{left:80,top:40, bottom:0, height:"75%"},
+		  		 areaOpacity: 0.7
+        });
+      }
+
+      google.setOnLoadCallback(drawVisualization);
+    </script>
+  </head>
+  <body style="font-family: Arial;border: 0 none;">
+  
+
+
+ 
+	
+	
+	
 <!--  STOCK CHOOSER  -->
 <div id="stockChooser" style="display:none;">
 <form name="stock" action="" method="post">
