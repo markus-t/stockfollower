@@ -8,6 +8,11 @@ function sysFlush_page() {
 	ob_start(); 
 }
 
+function sysError($message) {
+	echo '<div class="error">'.$message.'</div>';
+	die;
+}
+
 ### Returns date in more readable way.
 function sysHumanDate($date) { # $date = date in format '2000-01-01'
 	switch ($date) {
@@ -34,5 +39,15 @@ function sysNumber_readable($a, $b, $c, $d, $negativeRed = false) {
 	return $output;
 }
 
+function loggedInCheck($redirect = true) {
+	global $userID;
+	if(!$userID  && $redirect) {
+		header( 'Location: login.php' ) ;
+		exit;
+	} else if(!$userID) {
+		echo 'div class="error">Du har blivit utlogad</div>';
+		exit;
+	}
+}
 
 ?>

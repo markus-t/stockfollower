@@ -3,78 +3,94 @@
 # PHP SERVER 
 
 include 'config.php';
-include 'class.php';
-include 'class_rss.php';
+include 'functions/port.php';
+include 'functions/stock.php';
+include 'functions/index.php';
+include 'functions/sys.php';
+include 'functions/rss.php';
+include 'functions/update.php';
+include 'setVar.php';
+
+set_time_limit (0);
 
 function pD() {
-  return date('Y-m-d h:i:s');
+  return date('Y-m-d H:i:s');
 }
 
 function u1() {
-  global $fetch_nordnet, $fetch_morningstar, $fetch_avanza;
-  update::nordnet($fetch_nordnet);
-  update::morningstar($fetch_morningstar);
-  update::avanza($fetch_avanza);
-  pop::cDividendSum();
-  pop::cHoldingSum();
+	global $TODAY;
+	global $mysqli;
+	$TODAY = date("Y-m-d");
+	
+	$nordnet = stockGetUpdateList('nordnet');
+	updateNordnet($nordnet);
+
+	$morningstar = stockGetUpdateList('morningstar');
+	updateMorningstar($morningstar);
+
+	$avanza = stockGetUpdateList('avanza');
+	updateAvanza($avanza);
 }
 
 function u2() {
-  global $fetch_nordnet, $fetch_morningstar;
-  update::nordnet($fetch_nordnet);
-  update::morningstar($fetch_morningstar);
-  update::avanza($fetch_avanza);
-  pop::cDividendSum();
-  pop::cHoldingSum();
+	global $TODAY;
+	$TODAY = date("Y-m-d");
+	$nordnetCurrent = stockGetUpdateList('nordnetcurrent');
+	updateNordnetCurrent($nordnetCurrent);
 }
 
-$rssTimer      = 120;
+$rssTimer      = 1800;
 $rssLastUpdate = time() - $rssTimer - 1;
-
-$run1800  = FALSE;
-$run2100  = FALSE;
-$firstRun = TRUE;
-
 
 # Server loop
 while(TRUE) {
-  #fetch day, before 09:00 is yesterday and after 09:00 is today.
-  $hourNow = date('H');
-  if('09' > $hourNow) {
-    $offset = ($hourNow + 1) * 60 * 60;
-    $date = date('Y-m-d', time() - $offset);
-  } else {
-    $date = date('Y-m-d');
-  } 
-
   if((time() - $rssLastUpdate) > $rssTimer) {
     echo pD() . " Doing RSS feed update\n";
-    $array = rss::getList();
-    rss::update($array);
+	$rss = rssGetList();
+	rssUpdate($rss);
     $rssLastUpdate = time();
   }
 
-  if(!$run2100 && date('H') == 21) {
-    echo pD() . " Doing 21:00 price update\n";
-    u2();
-    $run2100 = TRUE;
-    $run1800 = TRUE;
-  }
+	if(date('i') == 00) {
+		if(date('N') <= 5 && date('H') > 08 && date('H') < 19) {
+			echo pD() . " Doing update NordnetCurrent\n";
+			u2();
+		}
 
-  if(!$run1800 && date('H') == 18) {
-    echo pD() . " Doing 18:00 price update\n";
-    u1();
-    $run1800 = TRUE;
-  }
+		if(date('N') <= 5 && (date('H') == 21 || date('H') == 18)) {
+			echo pD() . " Doing update Nordnet, Morningstar and Avanza\n";
+			u1();
+		}
+		echo pD() . " Doing dividends\n";
+		portCacheDividendSum();
 
-  if($firstRun && !$run2100 && !$run1800) {
-    echo pD() . " Doing firstrun price update\n";
-    u2();
-    $firstRun = FALSE;
-  }
-
+		if(date('H') == 03) {
+			echo pD() . " Doing night rebuild of Holdingsum\n";
+			portCacheHoldingSum('2000-01-01');
+		} else  {
+			echo pD() . " Doing rebuild of holdingsum\n";
+			portCacheHoldingSum('2013-01-01');
+		}
+		echo pD() . " Commits\n";
+		$mysqli->commit();
+	}
+  
+	if(date('i') == 30) {
+		if(date('N') <= 5 && date('H') > 08 && date('H') < 18) {
+			echo pD() . " Doing update NordnetCurrent\n";
+			u2();
+			echo pD() . " Doing dividends\n";
+			portCacheDividendSum();
+			echo pD() . " Doing rebuild of holdingsum\n";
+			portCacheHoldingSum('2013-01-01');
+			echo pD() . " Commits\n";
+			$mysqli->commit();
+		}		
+	}
+  
+  
   echo pD() . " Sleeping\n";
-  sleep('20');
+  sleep('35');
 }
 
 ?>

@@ -1,7 +1,5 @@
 <?php
 
-### Index class
-
 ### Resolve name
 function indexResName($isin) {
 	$query="SELECT * FROM indexname 
@@ -10,7 +8,6 @@ function indexResName($isin) {
 	$var = mysql_fetch_row($result);
 	if(!empty($var[0]))
 	$output['name'] = $var[1];
-
 	return $output['name'];
 }
 

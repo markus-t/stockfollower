@@ -13,9 +13,9 @@ include './classes/rss_php.php';
         $query="SELECT * FROM rss WHERE stockID = '$var[stockID]' AND pubDate = '$time'";
         $result = mysql_query($query);
         if(0 == mysql_num_rows($result)) {
-          $pdf = rssGetRelease($each['link']);
-          $query = "INSERT INTO rss (stockID, new,              pubDate,  title,          link, pdf)
-                    VALUES          ('$var[stockID]', TRUE,      '$time',  '$each[title]', '$each[link]', '" . mysql_real_escape_string($pdf['data']) ."')";
+          /* $pdf = rssGetRelease($each['link']); */
+          $query = "INSERT INTO rss (stockID, new,              pubDate,  title,          link)
+                    VALUES          ('$var[stockID]', TRUE,      '$time',  '$each[title]', '$each[link]')";
           $result=mysql_query($query) or die(mysql_error());;
         }
       }
@@ -51,6 +51,7 @@ include './classes/rss_php.php';
     mysql_query($query) or die(mysql_error());;
   }
 
+  /*
   function rssGetRelease($link) {
      $handle = fopen($link, "r");
      $contents = stream_get_contents($handle);
@@ -72,7 +73,7 @@ include './classes/rss_php.php';
      }
 
      return $output;
-  }
+  }*/
   function rssIsUnread() {
     $query = "SELECT * FROM rss WHERE new = '1'";
     $result = mysql_query($query) or die(mysql_error());;

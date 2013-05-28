@@ -1,53 +1,116 @@
 <?php
 
 
+#####CURL GET URL#####
+function get_url($url) {
+  $ch = curl_init();
+  $timeout = 5;
+
+  curl_setopt($ch, CURLOPT_URL, $url);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+  curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 GTB5');
+  $data = curl_exec($ch);
+  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE); 
+  curl_close($ch);
+  
+  if ($httpCode == 200) {
+    return $data;
+  }
+  return false;
+}
+
 #####NORDNET#####
 function updateFilter($var){ 
 	return(preg_match("/^20/", $var));
 }
 function updateNordnet($fetch) {
-	$output = '';
-	foreach($fetch as $address) {
-		$file = file($address['link']);
+	foreach($fetch as $stockID => $link) {
+		$file = file($link);
 		foreach(array_filter($file, "updateFilter") as $line){
 		###BUG
-			$reg = "/(201[0-9]-[0-9]{2}-[0-9]{2})[\s]([0-9]+,[0-9]+)/";
+			$reg = "/(2013-[0-9]{2}-[0-9]{2})[\s]([0-9]+,[0-9]+)/";
 			preg_match ($reg, $line, $matches);
 			if(!empty($matches)) {
 				$matches['2'] = preg_replace("/,/", ".", $matches['2']);
-				$query = "REPLACE INTO stockprice (date, price, stockID)
-							VALUES ('$matches[1]', '$matches[2]', '$address[stockID]')";
-				$output .= $query . "\n";
-				$result=mysql_query($query) or die(mysql_error());; 
+				stockUpdatePrice($stockID, $matches['1'], $matches['2']);
 			}  
 		}
 	}
-	return $output;
+	return true;
 }  
+
+function updateNordnetCurrent($nordnetCurrent) {
+	global $TODAY;
+	$data = get_url("https://www.nordnet.se/mux/web/marknaden/kurslista/aktier.html?marknad=Sverige&lista=1_1&large=on&mid=on&small=on&sektor=0");
+	$data = utf8_encode($data);
+
+	foreach($nordnetCurrent as $stockID => $id) {
+		$reg  = '`';
+		$reg .= '\<td class\="text"\>\<div class\="truncate"\>\<a href\="/mux/web/marknaden/aktiehemsidan/index\.html\?identifier\='.$id.'&marketplace\=[0-9]*" class\="underline"\>[a-zA-Z0-9 \.]*\</a\>\</div\>\</td\>[\s\t\r\n]*';
+		$reg .= '\<td  \>([0-9]*,[0-9]*)\</td\>[\s\t\r\n]*';
+		$reg .= '\<td  \>\<span class\="kurs(Minus|Plus|Neutral)"\>[\-]*[0-9]*,[0-9]*\</span\>\</td\>[\s\t\r\n]*';
+		$reg .= '\<td  \>\<span class\="kurs(Minus|Plus|Neutral)"\>[\-]*[0-9]*,[0-9]*%\</span\>\</td\>[\s\t\r\n]*';
+		$reg .= '\<td  \>[0-9]*,[0-9]*\</td\>[\s\t\r\n]*';
+		$reg .= '\<td  \>[0-9]*,[0-9]*\</td\>[\s\t\r\n]*';
+		$reg .= '\<td  \>[0-9]*,[0-9]*\</td\>[\s\t\r\n]*';
+		$reg .= '\<td  \>[0-9]*,[0-9]*\</td\>[\s\t\r\n]*';
+		$reg .= '\<td  \>[0-9 ]*\</td\>[\s\t\r\n]*';
+		$reg .= '\<td  \>SEK\</td\>[\s\t\r\n]*';
+		$reg .= '\<td class\="last" \>([0-9]*\:[0-9]*) \<img class\="delayicon" title\="[^"]*" alt\="([^"]*)" src\="[^"]*" /\>\</td\>';
+		$reg .= '';
+		$reg .= '`';
+		preg_match($reg, $data, $matches);
+		if($matches['5'] == 'StÃ¤ngningskurs') 
+			$close = true;
+		else
+			$close = false;
+			
+		$matches['1'] = preg_replace("/,/", ".", $matches['1']);
+		if($matches['1'] > 0) {
+			stockUpdatePrice($stockID, $TODAY, $matches['1'], $close, $matches['4']);
+		}
+	}
+}
 
 #####MORNINGSTAR#####
 function updateMorningstar($fetch) {
-	$output = '';
-	foreach($fetch as $address) {
-		$file = file($address['link']);
-		foreach($file as $line){
-			$reg = "/<td>Senaste NAV<\/td><td>  ([0-9]+,[0-9]+) SEK<\/td><td>([0-9]{4}-[0-9]{2}-[0-9]{2})<\/td>/";
-			preg_match ($reg, $line, $matches);
-			if(!empty($matches)) {
-				$matches['1'] = preg_replace("/,/", ".", $matches['1']);
-				$query = "INSERT IGNORE stockprice (date, price, stockID)
-					VALUES ('$matches[2]', '$matches[1]', '$address[stockID]')";
-				$output .= $query . "\n";
-				$result=mysql_query($query) or die(mysql_error());; 
-			}  
-		}
+	foreach($fetch as $stockID => $link) {
+		$file = get_url($link);
+		$reg = "/<td>Senaste NAV<\/td><td> ([0-9 ]*[0-9]+,[0-9]+) SEK<\/td><td>([0-9]{4}-[0-9]{2}-[0-9]{2})<\/td>/";
+		preg_match ($reg, $file, $matches);
+		if(!empty($matches)) {
+			$matches['1'] = preg_replace("/,/", ".", $matches['1']);
+			$matches['1'] = str_replace(" ", "", $matches['1']);
+			stockUpdatePrice($stockID, $matches['2'], $matches['1']);
+		}  
 	}
-	return $output;
+	return true;
 }
 
-#####AVANZA#####
+#####NORDEA SIX SOLUTIONS#####
+function updateNordeaSix($fetch = 0) {
+	$data = get_url("http://nordea.solutions.six.se/nordea.public/include/iframe.page?t=nordea_fund_retnav&x5=commonGroupX.intervalPeriod/1*year&x1=main.tickercode/200583&x13=main.priceType/Ret&x100=mainValueBase.tickercode/200583");
+    if ($data) {
+		$reg = "/\"parent.sV\('([0-9]{4}-[0-9]{2}-[0-9]{2})','([0-9]+.[0-9]+)'\);\"/";
+		preg_match_all ($reg, $data, $matches);
+		$output = "";
+		foreach ($matches['1'] as $key => $line) {
+		    $value = $matches['2'][$key];
+			$query = "REPLACE INTO stockprice (date, price, stockID)  VALUES ('$line', '$value', '5');";
+		    $result=mysql_query($query) or die(mysql_error());;
+			$output .= $query . "\n";
+		}
+		echo $output;
+	} else { 
+	  echo "not status 200"; 
+	}
+	  
+}
+
+#####AVANZA AKTIER#####
 function updateAvanza($fetch) {
-	$output = '';
 	### Tidigaste klockslag vi kan ta hem rätt uppgifter
 	$minTid = '18';
 	### Senaste klockslag vi kan ta hem rätt uppgifter
@@ -62,20 +125,22 @@ function updateAvanza($fetch) {
 		return("tiden är utanför tillåten tid (AVANZA)");
 	}
 	foreach($fetch as $stockID => $link) {
-		$file = file_get_contents($link);
-		$reg = '/>[A-Za-z .]*<\/td><td nowrap class="(winner|looser|neutral)">[\-\+]*[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">[\-\+]*[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">([0-9]+,[0-9]+)<\/td>/';
-		preg_match ($reg, $file, $matches);
+	    $check = "SELECT * FROM stockprice WHERE date = '$date' AND stockID = $stockID";
+		$result = mysql_query($check);
+		$num_rows = mysql_num_rows($result);
+		if ($num_rows == 0) {
 
-		if(!empty($matches)) {
-			# Replace dot with comma
-			$matches['6'] = preg_replace("/,/", ".", $matches['6']);
-			$query = "REPLACE INTO stockprice (date, price, stockID)
-						VALUES ('$date', '$matches[6]', '$stockID')";
-			$output .= $query . "\n";
-			$result=mysql_query($query) or die(mysql_error());;
-		}  
+			$file = file_get_contents($link);
+			$reg = '/>[A-Za-z0-9 .]*<\/td><td nowrap class="(winner|looser|neutral)">[\-\+]*[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">[\-\+]*[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">[0-9]+,[0-9]+<\/td><td nowrap class="(winner|looser|neutral)">([0-9]+,[0-9]+)<\/td>/';
+			preg_match ($reg, $file, $matches);
+
+			if(!empty($matches)) {
+				$matches['6'] = preg_replace("/,/", ".", $matches['6']);
+				stockUpdatePrice($stockID, $date, $matches['6']);
+			} 
+		}
 	}
-	return $output;
+	return true;
 }
 
 ###NASDAQ INDEX PARSER### 
@@ -97,14 +162,12 @@ function updateNasdaqParse($rawData) {
 			$temp_row['3'] = preg_replace("/,/", ".", $temp_row['3']);
 			$output[$i]['price'] = preg_replace("/ /", "", $temp_row['3']);
 		} 
-
 	}
 	return $output;
 }
 
 ###NASDAQ RETRIEVER###
-function updateNasdaqGet($instrument, $toDate, $fromDate = '2012-05-01') {
-
+function updateNasdaqGet($instrument, $toDate, $fromDate = '2013-02-01') {
 	$requestData =
 	'<post>
 	<param name="SubSystem" value="History"/>
@@ -144,19 +207,21 @@ function updateNasdaqGet($instrument, $toDate, $fromDate = '2012-05-01') {
 
 ###INDEX UPDATER###
 function updateIndex($values, $isin){
+	global $mysqli;
+	$stmt = $mysqli->prepare("REPLACE INTO indexprice (ISIN, date, price)
+							VALUES (?, ?, ?)");
 	$output = '';
 	foreach($values as $key) {
-		$query = "REPLACE INTO indexprice (ISIN, date, price)
-				VALUES ('$isin', '$key[date]', '$key[price]')";
-		$result=mysql_query($query) or die(mysql_error());;
+		$stmt->bind_param('sss', $isin, $key['date'], $key['price'] );
+		$stmt->execute();
 	}
 }
 
-function updateNasdaq($toDate) {
+function updateNasdaq($toDate, $fromDate) {
 	$indexList = indexGetList();
 	### Makes php seg fault if the document is to big, use with caution..
 	foreach($indexList as $index) {
-		$ng = updateNasdaqGet($index['ISIN'], $toDate);
+		$ng = updateNasdaqGet($index['ISIN'], $toDate, $fromDate);
 		$output = updateNasdaqParse($ng);
 		updateIndex($output, $index['ISIN']);
 	} 

@@ -1,289 +1,102 @@
 <?php
+echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"'."\n";
+echo '	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'."\n";
+echo '<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">'."\n";
+echo ' <head>'."\n";
+echo '  <title>STOCK</title>'."\n";
+echo '  <meta http-equiv="X-UA-Compatible" content="IE=10"/>'."\n";
+echo '  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />'."\n";
+echo '  <link rel="icon" href="http://85.24.243.69/stock/favicon.ico" type="image/vnd.microsoft.icon" />'."\n";
+echo '  <link rel="stylesheet" href="css/design.css" type="text/css" />'."\n";
+echo '  <link rel="stylesheet" href="css/jqueryui.css" type="text/css" />'."\n";
+echo '  <script type="text/javascript" src="js/jsapi"></script>'."\n";
+echo '  <script type="text/javascript" src="js/sorttable.js"></script>'."\n";
+echo '  <script type="text/javascript" src="js/jquery.js"></script>'."\n";
+echo '  <script type="text/javascript" src="js/jquery-ui.js"></script>'."\n";
+echo '  <script type="text/javascript" src="js/script.js"></script>'."\n";
+echo '  <script type="text/javascript">'."\n";
+echo "    google.load('visualization', '1', {packages: ['corechart']});"."\n";
+echo "	  $(document).ready(initiPop);"."\n";
+echo "	  $(document).ready(iniBut);"."\n";
+echo "  </script>"."\n";
+echo ' </head>'."\n";
+echo ' <body>'."\n";
+echo '  <div id="backgroundBlank" style="display:none;">'."\n";
+echo '  </div>'."\n";
+echo '  <div id="container">'."\n";
+echo '   <!-- START TOP NAVIGATION  --> '."\n";
+echo '   <div id="navigation">'."\n";
+echo '    <ul>'."\n";
 
-header("Content-type: text/html; charset=utf-8");
-session_start();
+$background = ($site == "port") ? ' style="background: #C9C;"' : '';
+echo '     <li><a href="index.php" accesskey="1"'.$background.'><img src="./img/money.png" height="32" width="32" border="0" alt="Portfölj"/></a></li>'."\n";
 
-#Both GET TO and GET FROM
-if(!empty($_GET['to']) && !empty($_GET['from'])){  
-  $_SESSION['TO']    = date('Y-m-d', strtotime($_GET['to']));
-  $_SESSION['FROM']  = date('Y-m-d', strtotime($_GET['from']));
-  $TO                = $_SESSION['TO'];
-  $FROM              = $_SESSION['FROM'];
-#Only GET TO
-} else if(!empty($_GET['to']) && empty($_GET['from'])){
-  $_SESSION['TO']    = date('Y-m-d', strtotime($_GET['to']));
-  $_SESSION['FROM']  = "2012-01-01";
-  $TO                = $_SESSION['TO'];
-  $FROM              = $_SESSION['FROM'];
-#Only GET FROM
-} else if(empty($_GET['to']) && !empty($_GET['from'])){
-  $_SESSION['TO']    = $TODAY;
-  $_SESSION['FROM']  = date('Y-m-d', strtotime($_GET['from']));
-  $TO                = $_SESSION['TO'];
-  $FROM              = $_SESSION['FROM'];
-#None, both SESSION TO & SESSION FROM
-} else if(!empty($_SESSION['TO']) && !empty($_SESSION['FROM'])) {
-  $TO                = $_SESSION['TO'];
-  $FROM              = $_SESSION['FROM'];
-#Standard dates.
-} else {
-  $TO   = $TODAY;
-  $FROM = "2013-01-01";
+if($_SESSION['admin']){
+	$background = ($site == "edit") ? ' style="background: #CC9"' : '';
+	echo '     <li><a href="edit.php" accesskey="3" '.$background.'><img src="./img/edit.png" height="32" width="32" border="0" alt="Lägg till/ändra aktier"/></a></li>'."\n";
+}
+if(isset($_SESSION['userID']) && $_SESSION['userID'] == true) {
+	echo '     <li><a href="index.php?loggaut=true"><img src="./img/signout.png" height="32" width="32" border="0" alt="Logga ut"/></a></li>'."\n";
+}
+echo '    </ul>'."\n";
+echo '    <div id="menu_right">';
+if(isset($_SESSION['userID']) && $_SESSION['userID'] == true) {
+
+	$totvalue = 0;
+	$totmv = 0;
+	$d = portGetStock($STARTDATE, $TODAY, $userID);
+	foreach ($d as $key) {
+		$data = portCacheGetHoldingSum($TODAY, $key, $userID);
+		$totvalue += $data['utv'] + $data['diravk'];
+		$totmv  += $data['tmValue'];
+	}
+
+	$totvalue2 = 0;
+	$d = portGetStock($STARTDATE, $YESTERDAY, $userID);
+	foreach ($d as $key) {
+		$data = portCacheGetHoldingSum($YESTERDAY, $key, $userID);
+		$totvalue2 += $data['utv'] + $data['diravk'];
+	}
+	if((((($totmv + $totvalue - $totvalue2) / $totmv) - 1) * 100) > 0 ) 
+		$img = 'arrowup.png';
+	else
+		$img = 'arrowdown.png';
+
+	echo '<div style="font-size: 0.9em; padding:3px; margin:0; display:inline-block">Idag:<img src="img/'.$img.'"> '.number_format(@(((($totmv + $totvalue - $totvalue2) / $totmv) - 1) * 100), 2, ',', ' ').'%</div>'."\n";
+}
+### Check for new messages
+if(rssIsUnread()) 
+	echo '     <a href="rss.php" class="menuObjectRight"><img src="img/unread.png" style="padding-right: 10px; margin: 0px;" width="22px" alt="D"/></a>'."\n";
+
+### User only section
+if(isset($_SESSION['userID']) && $_SESSION['userID'] == true) {
+	echo '     <form name="range" action="" method="get" class="menuObjectRight">'."\n";
+	echo '      <select name="indexID" style="padding: 0; margin: 5;" class="menuObjectRight" accesskey="i">'."\n";
+
+	echo '       <option value="-">-</option>'."\n";
+	$indexList = indexGetList();
+	foreach($indexList as $index){
+		$selected = ($indexISIN == $index['ISIN']) ? 'selected="selected"' : '';
+		echo '       <option value="'.$index['ISIN'].'" '.$selected.'>'.$index['name'].'</option>'."\n";
+	}
+
+	echo '      </select>'."\n"; 
+	echo '      <input type="hidden" name="stockID" value="'.$stockID.'"/>'."\n";
+	echo '      <input accesskey="f" type="text" name="from" id="dateinputex2" class="dateInput" value="'.$FROM.'" '.$_dField.' size="10" onclick="javascript:this.form.from.focus();this.form.from.select();" /> '."\n";
+	echo '      <img src="img/arrow.png" height="16px" style="margin-top:5px;" alt="->" /> '."\n";
+	echo '      <input accesskey="t" type="text" name="to" id="dateinputex1" class="dateInput" value="'.$TO.'" '.$_dField.' size="10" onclick="javascript:this.form.to.focus();this.form.to.select();"  />'."\n";
+	echo '      <input type="submit" value="Ok" />'."\n";
+	echo '     </form>'."\n";
+	echo '     <input type="submit" value="Filtrera" id="stockActivate" class="menuObjectRight" />'."\n";
+
 }
 
-if(strtotime($TO)   > strtotime($TODAY)) 
-  $TO = $TODAY;
-if(strtotime($FROM) > strtotime($TO)) 
-  $FROM = $TO;
-if(strtotime($FROM) < strtotime('2011-05-01'))
-  $FROM = '2011-05-01';
+echo '          </div>'."\n";
 
+echo '          <!-- STOP TOP NAVIGATION  --> '."\n";
+echo '        </div>'."\n";
 
-if(!empty($_GET['indexID'])) {
-  $_SESSION['indexID']  = $_GET['indexID'];
-  $indexISIN = $_SESSION['indexID'];
-} else if(!empty($_SESSION['indexID'])) {
-  $indexISIN = $_SESSION['indexID'];
-} else {
-  $indexISIN = '-';
-}
+echo '        <div id="content">'."\n";
 
-if($indexISIN != '-')
-  $compareToIndex = true;
-else
-  $compareToIndex = false;
-
-
-if(!empty($_GET['stock'])) {
-  $_stock  = $_GET['stock'];
-  $_dField = 'readonly="readonly"';
-  $_dClass = ' dateInputGrey';
-} else {
-  $_stock  = '';
-  $_dClass = '';
-  $_dField = '';
-}
-
-
-if(isset($_GET['stock'])) {
-  $stockID = $_GET['stock'];
-}
-
-
-
-?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-  <head>
-<title>STOCK</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <link rel="icon" href="http://192.168.0.101/stock/favicon.ico" type="image/vnd.microsoft.icon" />
-    <script type="text/javascript" src="js/jsapi"></script>
-	<script type="text/javascript">
-      google.load('visualization', '1', {packages: ['corechart']});
-    </script>
-    <script type="text/javascript" src="js/sorttable.js"></script>
-    <link rel="stylesheet" href="css/design.css" type="text/css" />
-    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
-	<link rel="stylesheet" type="text/css" media="all" href="css/datechooser.css" />
-	<script type="text/javascript" src="js/datechooser.js"></script>
-	<script type="text/javascript">
-	<!-- //
-
-		events.add(window, 'load', WindowLoad);
-
-		function WindowLoad()
-		{
-			/*
-				Example 1 Description:
-				The DateChooser will close 200 milliseconds after mouseout.
-				It will show 10 pixels to the right of, and 10 pixels above the click.
-				It will call the FunctionEx1() function (below) when updated.
-				Instead of using setLink() or setIcon(), so it attaches an event handler to 'datelinkex1' in the markup.
-			*/
-
-			var ndExample1 = document.getElementById('datechooserex1');
-			ndExample1.DateChooser = new DateChooser();
-
-			var ndExample2 = document.getElementById('datechooserex2');
-			ndExample2.DateChooser = new DateChooser();
-
-			// Check if the browser has fully loaded the DateChooser object, and supports it.
-			if (!ndExample1.DateChooser.display)
-			{
-				return false;
-			}
-
-			if (!ndExample2.DateChooser.display)
-			{
-				return false;
-			}
-
-			ndExample1.DateChooser.setCloseTime(2000);
-			ndExample1.DateChooser.setXOffset(-110);
-			ndExample1.DateChooser.setYOffset(30);
-			ndExample1.DateChooser.setUpdateFunction(FunctionEx1);
-			document.getElementById('datelinkex1').onclick = ndExample1.DateChooser.display;
-
-			ndExample2.DateChooser.setCloseTime(2000);
-			ndExample2.DateChooser.setXOffset(-110);
-			ndExample2.DateChooser.setYOffset(30);
-			ndExample2.DateChooser.setUpdateFunction(FunctionEx2);
-			document.getElementById('datelinkex2').onclick = ndExample2.DateChooser.display;
-
-			return true;
-		}
-
-		function FunctionEx1(objDate)
-		{
-			// objDate is a plain old Date object, with the getPHPDate() property added on.
-			document.getElementById('dateinputex1').value = objDate.getPHPDate('Y-m-d');
-			return true;
-		}
-
-		function FunctionEx2(objDate)
-		{
-			// objDate is a plain old Date object, with the getPHPDate() property added on.
-			document.getElementById('dateinputex2').value = objDate.getPHPDate('Y-m-d');
-			return true;
-		}
-
-		function FunctionEx6(objDate)
-		{
-			var ndExample5 = document.getElementById('datechooserex5');
-			ndExample5.DateChooser.setEarliestDate(objDate);
-			ndExample5.DateChooser.updateFields();
-
-			return true;
-		}
-
-	// -->
-	</script>
-    <script type="text/javascript">
-      $(document).ready(function(){
-
-
-        $('a#close').click(function(){
-   		  $('#stockChooser').hide('fast');
-		})   
-
-        var closed=true;
-   		$('input#stockActivate').click(function(){
-          if(closed) {
-            closed=false;
-            $('#stockChooser').show();
-          } else { 
-            closed=true;
-            $('#stockChooser').hide();
-          }
-        });
-
- 	  });
-    </script>
-<script>
-function load(num){
-   $("#LoadMe").load('ig.php');
-}
-</script>
-  </head>
-  <body>
-
-<?php
-if(empty($stockList)) {
-  $stockList = portGetStock('2010-01-01', $ENDDATE, "1");
-}
-?>
-
-
-
-  <?php
-
-
-
-?>
-  <div id="container">
-	<div id="navigation">
-		<ul>
-			<li><a href="index.php" accesskey="1" <?php if($site == "port") echo "style=\"background: #C9C;\""; ?> ><img src="./img/money.png" height="32" width="32" border="0" alt="Portfölj"/></a></li>
-			<li><a href="rss.php" accesskey="2" <?php if($site == "rss") echo "style=\"background: #9CC;\""; ?>><img src="./img/news.png" height="32" width="32" border="0" alt="Nyheter"/></a></li>
-            <!--<li><a href="stockIndex.php" accesskey="4" <?php if($site == "index") echo "style=\"background: #99C;\""; ?>>Index</a></li>-->
-            <li><a href="update.php" accesskey="3" <?php if($site == "update") echo "style=\"background: #CC9;\""; ?>><img src="./img/update.png" height="32" width="32" border="0" alt="Updatera"/></a></li>
-		</ul> 
-<div id="menu_right">
-
-
-
-<div id="loading" class="menuObjectRight"><img src="img/loading.gif" alt="LOADING" /> </div>
-
-
-<?php
-
-$totvalue = 0;
-$d = portGetStock('2011-05-01', $TODAY);
-foreach ($d as $key) {
-  $data = portCacheGetHoldingSum($TODAY, $key);
-  $totvalue += $data['tmValue'] - $data['diravk'];
-}
-
-$totvalue2 = 0;
-$d = portGetStock('2011-05-01', $YESTERDAY);
-foreach ($d as $key) {
-  $data = portCacheGetHoldingSum($YESTERDAY, $key);
-  $totvalue2 += $data['tmValue'] - $data['diravk'];
-}
-
-echo 'Sedan igår:';
-echo number_format((@($totvalue / $totvalue2) - 1) * 100, 2, ',', ' ');
-echo '%';
-
-if(rssIsUnread()) {
-  echo '<a href="rss.php" class="menuObjectRight"><img src="img/unread.png" style="padding-right: 10px; margin: 0px;" width="22px" alt="D"/></a>';
-}
-?>
-  <form name="range" action="" method="get" class="menuObjectRight">
-<select name="indexID" style="padding: 0; margin: 5;" class="menuObjectRight" accesskey="i">
-<?php 
-
-$indexList = indexGetList();
-echo '<option value="-">-</option>';
-foreach($indexList as $index){
-  if($indexISIN == $index['ISIN'])
-    $selected = 'selected="selected"';
-  else 
-    $selected = '';
-  echo '<option value="'.$index['ISIN'].'" '.$selected.'>'.$index['name'].'</option>';
-}
-
-?>
-</select> 
-
-
-
-  <input type="hidden" name="stock" value="<?php echo $_stock; ?>"/>
-  <span id="datechooserex2">
-    <a id="datelinkex2" href="#" ><img src="img/datechooser.png" style="margin: 3px 0 0 0; border:0px;" alt="Välj från datum"/></a>
-    <input accesskey="f" type="text" name="from" id="dateinputex2" class="dateInput<?php echo $_dClass ?>" value="<?php echo $FROM ?>" <?php echo $_dField ?> size="8" onclick="javascript:this.form.from.focus();this.form.from.select();" /> 
-  </span>
-
-  <span id="datechooserex1">
-    <a id="datelinkex1" href="#" ><img src="img/datechooser.png" style="margin: 3px 0 0 0; border:0px;" alt="Välj till datum"/></a>
-    <input accesskey="t" type="text" name="to" id="dateinputex1" class="dateInput<?php echo $_dClass ?>" value="<?php echo $TO ?>" <?php echo $_dField ?> size="8" onclick="javascript:this.form.to.focus();this.form.to.select();"  />
-  </span>
-  <input type="submit" value="OK" />
-<!--  <input type="checkbox" style="padding: 0; margin: 5; float: right;" value="sirius" label="gross"/>
-  <input type="checkbox" style="padding: 0; margin: 5; float: right;" value="sirius" label="gross"/>
-  <input type="checkbox" style="padding: 0; margin: 5; float: right;" value="sirius" label="gross"/>-->
-</form>
-
-<input type="submit" value="SORTERA" id="stockActivate" class="menuObjectRight" />
-
-
-</div>
-
-	</div>
-	<div id="content">
-	
-
-<?php
 sysFlush_page();
 ?>

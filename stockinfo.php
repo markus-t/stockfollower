@@ -1,6 +1,6 @@
 <?php
-  $site="port";
-  ##Bug, jämförelse simulering går ej välja
+$site="port";
+##Bug, jämförelse simulering går ej välja
 
 include 'config.php';
 include 'functions/port.php';
@@ -8,22 +8,26 @@ include 'functions/stock.php';
 include 'functions/index.php';
 include 'functions/rss.php';
 include 'functions/sys.php';
+include 'setVar.php';
+loggedInCheck();
 include 'pageTop.php';
 
-$stockID = $_GET['stockID'];
+$date = portGetStockSpan($stockID, $userID);
+if($date)
+	$startdate2 = $date;
+else
+	$startdate2 = $FROM;
 
-$date = portGetStockSpan($stockID, "1");
-
-$startdate = $date['0'];
-
-?>
+if(stockInfo($stockID) == 1){
+	sysError("Aktien du försökte titta på verkar inte finnas.");
+	exit;
+}
  
-	 
- 
- <?php
-$output = portGetStock($FROM, $TO, "1");
-$output2 = portGetStockSummary('2000-01-01', $TODAY, $stockID);
-    echo '<table width="28%" style="float: left;" >';
+$output = portGetStock($FROM, $TO, $userID);
+$output2 = portGetStockSummary($STARTDATE, $TODAY, $stockID, $userID);
+
+
+    echo '<div class="contentbox" style="overflow: hidden; background-color: transparent; border:0; padding:0; "><div style="float: left;width: 240px; " ><table width="100%">';
     echo '<caption style="text-align: left; font-size:15px;">Data</caption>';
     echo "<tr>";
 	echo '<th style="text-align:left;">Namn</th>';
@@ -39,7 +43,7 @@ $output2 = portGetStockSummary('2000-01-01', $TODAY, $stockID);
 	echo "</tr>";
 	echo "<tr>";
 	echo '<th style="text-align:left;">Kursdatum</th>';
-	echo "<td>".$output2['date']."</td>";
+	echo "<td>".sysHumanDate($output2['date'])."</td>";
 	echo "</tr>";
 	echo "<tr>";
 	echo '<th style="text-align:left;">Anskaffningspris</th>';
@@ -65,7 +69,7 @@ $output2 = portGetStockSummary('2000-01-01', $TODAY, $stockID);
 	echo '<th style="text-align:left;">Realiserad s:a</th>';
 	echo "<td>".number_format($output2['rea'], 0, ',', ' ')."</td>";
 	echo "</tr>";
-	echo "<tr>";
+	echo "<!--<tr>";
 	echo '<th style="text-align:left;">Uppdatering Avanza</th>';
 	echo "<td>Ja</td>";
 	echo "</tr>";
@@ -76,52 +80,61 @@ $output2 = portGetStockSummary('2000-01-01', $TODAY, $stockID);
 	echo "<tr>";
 	echo '<th style="text-align:left;">Uppdatering Nordnet</th>';
 	echo "<td>Ja</td>";
-	echo "</tr>";
-    echo "</table>";
-
- ?>
- 	
+	echo "</tr>-->";
+    echo "</table></div>";
 
 
-<table width="68%" style="float: right" class="sortable"> 
-<caption style="text-align: left; font-size:15px;">Historik</caption>
-    <tr>
-	<th width="10px">ID</th>
-	<th>Datum</th>
-	<th>Beskrivning</th>
-	<th>Antal</th>
-	<th>Kurs</th>
-	<th>Summa</th>
-	</tr>
-<?php
+echo '<div style=" margin-left: 250px;" ><table class="sortable" width="100%"> 
+		<caption style="text-align: left; font-size:15px;">Historik</caption>
+			<tr>
+			<th width="10px">Del</th>
+			<th width="10px">ID</th>
+			<th>Datum</th>
+			<th>Händelse</th>
+			<th>Konto</th>
+			<th>Antal</th>
+			<th>Courtage</th>
+			<th>Kurs</th>
+			<th>Summa</th>
+			</tr>';
 
-  $activity = portGetStockActivityOld('2000-01-01', $TO, $stockID);
+
+  $activity = portGetStockActivityOld('2000-01-01', $TO, $stockID, $userID);
+
     $tID  = "1";
     $amount = "0";
     foreach($activity as $key ){
-
-      echo "<tr>";
+	if($key['ID'] != 0) {
+        echo '<tr id="trans'.$key['ID'].'">';
+		echo '<td><a class="popup" href="#" id="removeActivity" data-transid="'.$key['ID'].'" data-stockid="'.$stockID.'"><img style="margin:0;padding:0;" src="img/stop.gif"></a></td>';
+	 } else {
+        echo '<tr>';
+		echo '<td></td>';
+	}
 	  echo "<td>".$tID."</td>";
       echo "<td>".$key['date']."</td>";
-	  if($key['bought'] == 'bought') {
+	  if($key['action'] == 'bought') {
 	    echo "<td>köpt</td>"; 
         $amount += $key['quantity']; 
-	  } else if($key['bought'] == 'sold') {
+	  } else if($key['action'] == 'sold') {
 	    echo "<td>sålt</td>";
         $amount -= $key['quantity'];
-      } else if($key['bought'] == 'dividend') {
+      } else if($key['action'] == 'dividend') {
 	    echo "<td>utdelning</td>"; 	
         $key['quantity'] =   $amount;
 	  } 
+	  echo "<td>".$key['account']."</td>";
 	  echo "<td>".$key['quantity']."</td>";
+	  echo "<td>".$key['courtage']."</td>";
 	  echo "<td>".$key['price']."</td>";
 	  echo "<td>".round($key['price'] * $key['quantity'])."</td>";
 	  echo "</tr>";
 	  $tID = $tID + 1;
       
     }
-
-  echo "</table>";
+	
+  echo '<tfoot><td colspan="9" style="text-align:left;"><form action="showpricelist.php" method="get"><input type="hidden" value="'.$stockID.'" name="stockID"><input type="submit" value="Visa lagrade kurser"  /></form><input type="submit" value="Lägg till utdelning" id="addDividend" class="popup" /><input type="submit" value="Lägg till köp eller försäljning" id="stockActivityEnableW" data-stockid="'.$stockID.'" class="popup" /></td></tfoot>';
+  echo "</table></div>";
 
   $chartColumns['3'] = "data.addColumn('number', 'Kurs');\n";
   $chartColumns['2'] = "data.addColumn({type:'string', role:'annotation'});\n";
@@ -129,14 +142,15 @@ $output2 = portGetStockSummary('2000-01-01', $TODAY, $stockID);
 
   if($compareToIndex) {
     $chartColumns['0'] = "data.addColumn('number', '".indexResName($indexISIN)."');\n";
-    $indexToScale = indexGetValue($startdate, $indexISIN);
-    $scaleAgainst = stockGetValue($stockID, $startdate);
+    $indexToScale = indexGetValue($startdate2, $indexISIN);
+    $scaleAgainst = stockGetValue($stockID, $startdate2);
     @$scale = $scaleAgainst['value'] / $indexToScale['price'];
   }
 
   $current = '0';
   $annotation = 1;
   $chart_data = '';
+  $startdate = $startdate2;
   while(strtotime($startdate) <= strtotime($TODAY)) {
     $output = stockGetValue($stockID, $startdate);
     $ann = portGetStockAction($stockID, $startdate );
@@ -184,32 +198,29 @@ $output2 = portGetStockSummary('2000-01-01', $TODAY, $stockID);
         data.addRows([<?php echo $chart_data; ?>]);
         var options = {
           title: 'Kurs',
-		  annotation: {'2': {style: 'letter'}}
+		  annotation: {'2': {style: 'letter'}},
+		  lineWidth: 1
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
         chart.draw(data, options);
       }
     </script>
-
-    <div id="chart_div" class="chart" style="width: 100%; height: 250px; float: right; border-width:thin; border-style:solid; margin: 10px 0 0 0;"></div>
 <?php
 sysFlush_page();
  
-$startdate = $date['0'];
+$startdate = $startdate2;
 while($startdate <= $TO) {
-  $var[] = portCacheGetHoldingSum($startdate, $stockID);
+
+  $var[] = portCacheGetHoldingSum($startdate, $stockID, $userID);
   $startdate = strtotime ( '+1 day' , strtotime ($startdate) ) ;
   $startdate = date ( 'Y-m-d' , $startdate ); 
 }
 
 
-
 if($compareToIndex) {
-  $transactions = portGetStockTransactionsOld(array('1' => $stockID));
-
+  $transactions = portGetStockTransactions(array('1' => $stockID), $userID);
   $omx = portSimIndex($transactions,$indexISIN);
-
 }
 
 ?>
@@ -247,49 +258,52 @@ if($compareToIndex) {
 
         var options = {
           title: 'Utveckling',
-		 annotation: {'1': {style: 'letter'}}
+		  annotation: {'1': {style: 'letter'}},
+		  lineWidth: 1
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('char_div'));
         chart.draw(data, options);
       }
     </script>
-
-<div id="char_div" class="chart" style="width: 100%; height: 250px; float: right; margin: 10px 0 0 0"></div>
-<div style="width: 100%; height: 250px; float: right; margin: 10px 0 0 0">
+</div>
 <?php
+ echo '
 
+<div id="char_div" class="contentbox" style="height: 220px; z-index:1;"></div>
+<div id="chart_div" class="contentbox" style="height: 220px; z-index:1;"></div>
+
+'; 
   $out = rssReadStockID($stockID);
   if(!empty($out)) {
-  ?>
-<table width="100%" class="sortable">
-<tr class="row">
-<th style="text-align: left;">Datum</th>
-<th style="text-align: left;">Titel</th>
-<th style="text-align: left;">Länk</th>
+ 
+echo '
 
-</tr>	<?php
+	<table class="sortable contentbox" style="width: 100%;">
+	<tr class="row">
+	<th style="text-align: left;">Datum</th>
+	<th style="text-align: left;">Titel</th>
+	</tr>';
 
     foreach($out as $each) {
-      $stockName = stockResName($each['stockID']);
+      $stockName = stockInfo($each['stockID']);
       echo "<tr>";
       echo "<td style=\"text-align:left;\">" . $each['pubDate'] . '</td>';
       echo '<td style="text-align:left;">';
       if($each['new'] == '1')
         echo '<img src="unread.png" width="12px"><b>';
-      echo '<a href="rss.php?load=' . $each['ID'] . '">' . $each['title'] . '</a>';
+      echo '<a href="rss.php?load=' . $each['ID'] . '&link='.$each['link'].'">' . $each['title'] . '</a>';
       if($each['new'] == '1')
         echo '</b>';
       echo '</td>';
-      echo '<td style="text-align:left;"> <a href="' . $each['link'] . '">LÄNK</a>';
-      echo '</td>';
-
       echo '</tr>';
     }
 
-    echo "</table></div>";
+    echo "</table>";
   }
   
  include 'pageBottom.php';
  
-  ?>
+?>
+  
+  
