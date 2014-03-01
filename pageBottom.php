@@ -42,7 +42,8 @@ foreach($stockListAll as $stockID) {
 </div>
 </div>
 <!--  END PORT ACTIVITY ADD --> 	
-	
+	<hr>
+<span style="font-size:0.8em; font-style:italic;">StockFollower 2</span>
 </div>
 
 </body>

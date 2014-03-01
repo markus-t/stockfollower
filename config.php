@@ -10,7 +10,7 @@ ini_set('display_errors', '1');
 $dbSettings = array( 
 	'host' 		=> "localhost",
 	'username'	=> "stock",
-	'password'	=> "gittest",
+	'password'	=> "zzSLJwBE9eJP3vX6",
 	'database'	=> "stock",
 	'charset'	=> "utf8");
 	
@@ -60,7 +60,7 @@ $stockProperties =
 #How many days to calculate intereset on.
 $daysInBankYear = 365;
 
-$con = mysql_connect($dbSettings['host'],"stock","gittest");  
+$con = mysql_connect($dbSettings['host'],"stock","zzSLJwBE9eJP3vX6");  
   
 #check connection to Mysql
 if(!$con)
@@ -77,7 +77,7 @@ session_name("stockFollower");
 session_start();
 
 #mysqli Prepared STMNT
-$mysqli = new mysqli($dbSettings['host'], "stock", "gittest", "stock");
+$mysqli = new mysqli($dbSettings['host'], "stock", "zzSLJwBE9eJP3vX6", "stock");
 $mysqli->set_charset("utf8");
 $mysqli->autocommit(FALSE);
 

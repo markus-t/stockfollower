@@ -30,12 +30,20 @@ caption
 }
 
 #navigation {
-overflow: hidden;
+  overflow: hidden;
   padding:0;
   margin: 0;
   width: 100%;
   background-color: 	#BFB592;
   border-bottom: 1px solid #666;
+  height:36px;
+}
+
+.navitem {
+	display: inline-block; 
+	text-align: center; 
+	vertical-align: middle; 
+	line-height: 36px;
 }
 
 #navtop {
@@ -74,7 +82,7 @@ overflow: hidden;
 }
 
 .menuObjectRight {
-  display:inline;
+  display:inline-block;
 }
 
 #content {
@@ -183,9 +191,9 @@ z-index: 3;
   position:fixed;
     top:50%;
     left:50%;
-    width:400px;  /* adjust as per your needs */
-    margin-left:-200px;   /* negative half of width above */
-    margin-top:-200px;
+    width:500px;  /* adjust as per your needs */
+    margin-left:-250px;   /* negative half of width above */
+    margin-top:-250px;
   background-color:#FFF;
   z-index:4;
   display:none;

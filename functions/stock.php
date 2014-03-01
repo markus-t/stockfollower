@@ -131,4 +131,19 @@ function stockGetUpdateList($server)  {
 		 $output[$row['ID']] = $row['link'];
 	  return $output;
 }
+
+function stockAddDividend($stockID, $date, $amount) {
+	global $mysqli;
+	echo $stockID;
+	echo $date;
+	echo $amount;
+	$stmt = $mysqli->prepare("REPLACE INTO stockdividend (date, stockID, dividend)
+								VALUES (?, ?, ?)");
+	$stmt->bind_param('sss', $date, $stockID, $amount);
+	if ($stmt->execute()) { 
+		return true;
+	} else {
+		return false;
+	}
+}
 ?>

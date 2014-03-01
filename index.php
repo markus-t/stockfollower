@@ -32,8 +32,8 @@ echo '</tr>';
  
   $nodata = '';
   if(is_array($stockPapers)) {
-    foreach ($stockPapers as $stockID) 
-      $each[] = portGetStockSummary($FROM, $TO, $stockID, $userID);
+    $each = portGetStockSummary($FROM, $TO, $stockPapers, $userID);
+	  
     if (!empty($each)) {
 	  foreach ($each as $key => $row) {
         $volume[$key]  = $row['mvalue'];
@@ -96,14 +96,12 @@ echo '</tr>';
 	    echo "      <td>".number_format($sum['diravkkr'], 0, ',', ' ')."</td>\n";
 	    echo "      <td>".sysNumber_readable(($sum['diravkkr'] + $sum['rea'] + $sum['utvkr']), 0, ',', ' ', true)."</td>\n";
 	    echo "    </tr>\n";
-		echo '    <tr><td colspan=10><form style="display: inline;" action="showTransactions.php"><input type="submit"  value="Visa transaktionslista" id="showTransactionList" class="menuObjectRight" /></form><input type="submit" value="Prisuppdatering" id="stockAddPrice" class="menuObjectRight popup" /><input type="submit" value="Lägg till köp" id="stockActivityEnableW" class="menuObjectRight popup" /></td></tr>';
-        echo "  </tfoot>\n";
-      }  else {
+      } else {
 	    echo "  <tfoot>\n ";
-		echo '    <tr><td colspan=10><form style="display: inline;" action="showTransactions.php"><input type="submit"  value="Visa transaktionslista" id="showTransactionList" class="menuObjectRight" /></form><input type="submit" value="Prisuppdatering" id="stockAddPrice" class="menuObjectRight popup" /><input type="submit" value="Lägg till köp" id="stockActivityEnableW" class="menuObjectRight popup" /></td></tr>';
-        echo "  </tfoot>\n";
     $nodata = "Kunde inte hitta några poster";
-    }
+		}
+	echo '    <tr><td colspan=10><input type="submit" value="Lägg till utdelning" id="addDividend" data-stockid="'.$stockID.'" class="popup" /><form style="display: inline;" action="showTransactions.php"><input type="submit"  value="Visa transaktionslista" id="showTransactionList" class="menuObjectRight" /></form><input type="submit" value="Prisuppdatering" id="stockAddPrice" class="menuObjectRight popup" /><input type="submit" value="Lägg till köp/sälj" id="stockActivityEnableW" class="menuObjectRight popup" /></td></tr>';
+    echo "  </tfoot>\n";
     echo "</table>";
   }
   echo $nodata;
@@ -171,7 +169,7 @@ if(!empty($arr)) {
 	  })
 	  };
     </script>
-  
+  <!--
       <script type="text/javascript">
       function drawVisualization() {
         // Data
@@ -200,6 +198,8 @@ if(!empty($arr)) {
 
       google.setOnLoadCallback(drawVisualization);
     </script>
+	
+	-->
 
  
   <?php
@@ -235,7 +235,7 @@ if(!empty($arr)) {
     $areaHeight = 250;
   
   echo '<div id="utv" class="contentbox" style="height: 200px; z-index:1;">Utveckling<img class="loading" src="../stock/img/load1.gif" ></div>';
-  echo '<div id="visualization" class="contentbox" style="height: '.$areaHeight.'px; z-index:1;">Investerat över tid<img class="loading" src="../stock/img/load1.gif" ></div>';
+  echo '<!--<div id="visualization" class="contentbox" style="height: '.$areaHeight.'px; z-index:1;">Investerat över tid<img class="loading" src="../stock/img/load1.gif" ></div>-->';
   echo '<div class="contentbox" style="z-index:1; overflow: hidden;">';
   echo ' <div id="chart_div" style="width:49%; height: 300px; float: left;"><img class="loading" src="../stock/img/load1.gif" ></div>';
 ?>

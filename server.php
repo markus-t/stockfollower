@@ -52,6 +52,7 @@ while(TRUE) {
   }
 
 	if(date('i') == 00) {
+		updateBitstamp();
 		if(date('N') <= 5 && date('H') > 08 && date('H') < 19) {
 			echo pD() . " Doing update NordnetCurrent\n";
 			u2();
@@ -71,26 +72,28 @@ while(TRUE) {
 			echo pD() . " Doing rebuild of holdingsum\n";
 			portCacheHoldingSum('2013-01-01');
 		}
+		
 		echo pD() . " Commits\n";
 		$mysqli->commit();
 	}
   
 	if(date('i') == 30) {
+		updateBitstamp();
 		if(date('N') <= 5 && date('H') > 08 && date('H') < 18) {
 			echo pD() . " Doing update NordnetCurrent\n";
 			u2();
-			echo pD() . " Doing dividends\n";
-			portCacheDividendSum();
-			echo pD() . " Doing rebuild of holdingsum\n";
-			portCacheHoldingSum('2013-01-01');
-			echo pD() . " Commits\n";
-			$mysqli->commit();
 		}		
+		echo pD() . " Doing dividends\n";
+		portCacheDividendSum();
+		echo pD() . " Doing rebuild of holdingsum\n";
+		portCacheHoldingSum('2013-01-01');
+		echo pD() . " Commits\n";
+		$mysqli->commit();
 	}
   
   
   echo pD() . " Sleeping\n";
-  sleep('35');
+  sleep('45');
 }
 
 ?>

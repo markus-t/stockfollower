@@ -21,6 +21,20 @@ function get_url($url) {
   return false;
 }
 
+#####BITSTAMP BITCOIN#####
+function updateBitstamp() {
+	global $TODAY;
+	$file = get_url('https://www.bitstamp.net/api/ticker/');
+	$array = json_decode($file, true);
+	
+	$ticker = get_url('http://rate-exchange.appspot.com/currency?from=USD&to=SEK');
+	$ex = json_decode($ticker, true);
+	
+	$priceSEK = $array['last'] * $ex['rate'];
+	stockUpdatePrice('17', date("Y-m-d"), $priceSEK, false, date("H:i:s"));
+	return true;
+}
+
 #####NORDNET#####
 function updateFilter($var){ 
 	return(preg_match("/^20/", $var));
@@ -62,14 +76,16 @@ function updateNordnetCurrent($nordnetCurrent) {
 		$reg .= '';
 		$reg .= '`';
 		preg_match($reg, $data, $matches);
-		if($matches['5'] == 'Stängningskurs') 
-			$close = true;
-		else
-			$close = false;
+		if(!empty($matches)){
+			if($matches['5'] == 'Stängningskurs') 
+				$close = true;
+			else
+				$close = false;
 			
-		$matches['1'] = preg_replace("/,/", ".", $matches['1']);
-		if($matches['1'] > 0) {
-			stockUpdatePrice($stockID, $TODAY, $matches['1'], $close, $matches['4']);
+			$matches['1'] = preg_replace("/,/", ".", $matches['1']);
+			if($matches['1'] > 0) {
+				stockUpdatePrice($stockID, $TODAY, $matches['1'], $close, $matches['4']);
+			}
 		}
 	}
 }

@@ -24,8 +24,8 @@ if(stockInfo($stockID) == 1){
 }
  
 $output = portGetStock($FROM, $TO, $userID);
-$output2 = portGetStockSummary($STARTDATE, $TODAY, $stockID, $userID);
-
+$output2 = portGetStockSummary($STARTDATE, $TODAY, array($stockID), $userID);
+$output2 = $output2[0];
 
     echo '<div class="contentbox" style="overflow: hidden; background-color: transparent; border:0; padding:0; "><div style="float: left;width: 240px; " ><table width="100%">';
     echo '<caption style="text-align: left; font-size:15px;">Data</caption>';
@@ -98,9 +98,8 @@ echo '<div style=" margin-left: 250px;" ><table class="sortable" width="100%">
 			<th>Summa</th>
 			</tr>';
 
-
-  $activity = portGetStockActivityOld('2000-01-01', $TO, $stockID, $userID);
-
+	$activity = portGetStockTransactions(array($stockID), $userID, $TO);
+	$activity = portGetStockActivityOld('2000-01-01', $TO, $stockID, $userID);
     $tID  = "1";
     $amount = "0";
     foreach($activity as $key ){
@@ -133,7 +132,7 @@ echo '<div style=" margin-left: 250px;" ><table class="sortable" width="100%">
       
     }
 	
-  echo '<tfoot><td colspan="9" style="text-align:left;"><form action="showpricelist.php" method="get"><input type="hidden" value="'.$stockID.'" name="stockID"><input type="submit" value="Visa lagrade kurser"  /></form><input type="submit" value="Lägg till utdelning" id="addDividend" class="popup" /><input type="submit" value="Lägg till köp eller försäljning" id="stockActivityEnableW" data-stockid="'.$stockID.'" class="popup" /></td></tfoot>';
+  echo '<tfoot><td colspan="9" style="text-align:left;"><form action="showpricelist.php" method="get"><input type="hidden" value="'.$stockID.'" name="stockID"><input type="submit" value="Visa lagrade kurser"  /></form><input type="submit" value="Lägg till utdelning" id="addDividend" data-stockid="'.$stockID.'" class="popup" /><input type="submit" value="Lägg till köp eller försäljning" id="stockActivityEnableW" data-stockid="'.$stockID.'" class="popup" /></td></tfoot>';
   echo "</table></div>";
 
   $chartColumns['3'] = "data.addColumn('number', 'Kurs');\n";

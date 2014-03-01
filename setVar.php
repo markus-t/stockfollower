@@ -110,6 +110,7 @@ if(isset($_REQUEST['stockID']) && preg_match('/^[0-9]*$/', $_REQUEST['stockID'])
 @$courtage       = $_REQUEST['courtage'];
 @$addQuantity    = str_replace(',', '.', $_REQUEST['antal']);
 @$addUserID      = $userID;
+@$addTime        = $_REQUEST['time'];
 
 
 #No more sessionwriting.

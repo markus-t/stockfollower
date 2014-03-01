@@ -40,7 +40,7 @@ if(isset($_REQUEST['ownAmount'])){
 		echo '<div class="error">Ett fel inträffade</div>';
 	}
 } else if(isset($_REQUEST['portActivityAdd'])) {
-    $portTransactionAdd = portTransactionAdd($addStockID, $addDate, $addQuantity, $addPrice, $courtage, $addUserID, $_REQUEST['activity']);
+    $portTransactionAdd = portTransactionAdd($addStockID, $addDate, $addQuantity, $addPrice, $courtage, $addUserID, $_REQUEST['activity'], $addTime);
 	if($portTransactionAdd && portCacheDividendSum() && portCacheHoldingSum($addDate, array($addUserID), array($addStockID))){
 		$stockInfo = stockInfo($addStockID);
 		$mysqli->commit();
@@ -53,6 +53,10 @@ if(isset($_REQUEST['ownAmount'])){
 		echo '  <tr>';
 		echo '    <th style="text-align:left;">Datum</th>';
 		echo '    <td>'.$addDate.'</td>';
+		echo '  </tr>';
+		echo '  <tr>';
+		echo '    <th style="text-align:left;">Tid</th>';
+		echo '    <td>'.$addTime.'</td>';
 		echo '  </tr>';
 		echo '  <tr>';
 		echo '    <th style="text-align:left;">Händelse</th>';
@@ -80,6 +84,50 @@ if(isset($_REQUEST['ownAmount'])){
 		$mysqli->rollback();
 		echo '<div class="error">Ett fel inträffade</div>';
 	}
+} else if(isset($_REQUEST['stockDividendAdd'])) {
+	$quantity = portGetQuantity($_REQUEST['stockID'], $_REQUEST['date'], $userID);
+	if($_REQUEST['dividendCalc'] == "perinnehav") {
+		if($quantity['quantity'] <> 0){
+			$dividend_per_enhet = $_REQUEST['dividend'] / $quantity['quantity'];
+			$dividend_per_innehav = $_REQUEST['dividend'];
+		} else {
+			$dividend_per_enhet = 0;
+			$dividend_per_innehav = 0;
+		}
+	} else if($_REQUEST['dividendCalc'] == "perenhet") {
+		$dividend_per_enhet = $_REQUEST['dividend'];
+		$dividend_per_innehav = $_REQUEST['dividend'] * $quantity['quantity'];
+	}
+	echo '<h2>Lägg till utdelning</h2>';
+	echo 'Vill du verkligen lägga till denna utdelning till databasen?<br><br>';
+	echo '
+	<form action="" method="post" id="form_process">
+	<table width="100%"  > 
+		<tr>
+		<th style="text-align:left;">Datum</th>
+		<td>'.$_REQUEST['date'].'</td>
+		</tr>
+		<tr>
+		<th style="text-align:left;">Utdelning per enhet</th>
+		<td>'.$dividend_per_enhet.'</td>
+		</tr>
+		<tr>
+		<th style="text-align:left;">Utdelning för ditt innehav</th>
+		<td>'.$dividend_per_innehav.'</td>
+		</tr>
+		<tr>
+		<th></th>
+		<td>
+		<input type="hidden" value="1" name="addDividend"/>
+		<input type="hidden" value="'.$dividend_per_enhet.'" name="amount"/>
+		<input type="hidden" value="'.$_REQUEST['stockID'].'" name="stockID"/>
+		<input type="hidden" value="'.$_REQUEST['date'].'" name="date"/>
+		<input type="submit" value="Bekräfta" name="addDividend" class="button2"/></td>
+		</tr>
+	</table>
+	</form>
+	<div id="form_error"></div>';
+
 } else if(isset($_REQUEST['div']) && $_REQUEST['div'] == 'stockActivityEnableW'){
 	echo '<h2>Lägg till köp</h2>';
 	echo '<form action="" method="post" id="form_process">';
@@ -98,9 +146,9 @@ if(isset($_REQUEST['ownAmount'])){
 		echo '</select>';
 	} else { 
 		$output = portGetStock($FROM, $TO, $userID);
-		$output2 = portGetStockSummary('2000-01-01', $TODAY, $stockID, $userID);
+		$output2 = portGetStockSummary('2000-01-01', $TODAY, array($stockID), $userID);
 		
-		echo ''.$output2['shortName'].'';
+		echo ''.$output2['0']['shortName'].'';
 		echo '<input type="hidden" name="stockID"  value="'.$stockID.'" size="8" />';
 	} 
 	echo '</td>';
@@ -110,12 +158,16 @@ if(isset($_REQUEST['ownAmount'])){
 	echo '<td><input type="text" name="date" onchange="ownAmount();" id="date" size="8" style="text-align:right;" onkeyup="ownAmount();" value="'.$TODAY.'"/></td>';
 	echo '</tr>';
 	echo '<tr>';
+	echo '<th style="text-align:left;">Tid <abbr title="Behövs endast om du har flera köp och sälj under samma dag">?</abbr></th>';
+	echo '<td><input type="text" name="time" onchange="ownAmount();" id="time" size="8" style="text-align:right;" value="00:00"/></td>';
+	echo '</tr>';
+	echo '<tr>';
 	echo '<th style="text-align:left;">Händelse</th>';
 	echo '<td><select name="activity" ><option value="bought">Köp</option><option value="sold">Sälj</option></select></td>';
 	echo '</tr>';
 	echo '<tr>';
 	echo '<th style="text-align:left;">Konto</th>';
-	echo '<td><select name="konto" ><option value="bought">Investeringsparkonto</option><option value="bought">Kapitalförsäkring</option><option value="sold">Vanligt konto</option></select></td>';
+	echo '<td><select name="konto" ><option value="ISK">Investeringsparkonto</option><option value="KF">Kapitalförsäkring</option><option value="VP">Vanligt konto</option></select></td>';
 	echo '</tr>';
 	echo '<tr>';
 	echo '<th style="text-align:left;">Antal</th>';
@@ -188,7 +240,60 @@ if(isset($_REQUEST['ownAmount'])){
 	}
 	
 } else if(isset($_REQUEST['div']) && $_REQUEST['div']  == 'addDividend'){
-	echo 'Rutin lägg till utdelning saknas.';
+	echo '<h2>Lägg till utdelning</h2>';
+	echo '<form action="" method="post" id="form_process">';
+	echo '<table width="100%"> ';
+	echo '<tr>';
+	echo '<th style="text-align:left;">Fond eller Aktie</th>';
+	echo '<td>';
+	if(empty($stockID)) { 
+		echo '<select name="stockID">';
+		echo '<option value="0"> -</option>';
+		$indexList = stockGetList();
+		
+		foreach($indexList as $index)
+			echo '<option value="'.$index['stockID'].'">'.$index['shortName'].'</option>';
+	
+		echo '</select>';
+	} else { 
+		$output = portGetStock($FROM, $TO, $userID);
+		$output2 = portGetStockSummary('2000-01-01', $TODAY, array($stockID), $userID);
+		
+		echo ''.$output2['0']['shortName'].'';
+		echo '<input type="hidden" name="stockID"  value="'.$stockID.'" size="8" />';
+	} 
+	echo '</td>';
+	echo '</tr>'; 
+	echo '<tr>';
+	echo '<th style="text-align:left;">Datum</th>';
+	echo '<td><input type="text" name="date" id="date" size="8" style="text-align:right;" value="'.$TODAY.'"/></td>';
+	echo '</tr>';
+	echo '<tr>';
+	echo '<th style="text-align:left;">Utdelning</th>';
+	echo '<td><input type="text" name="dividend" id="antal" size="8" style="text-align:right;" value="0"/></td>';
+	echo '</tr>';
+	echo '<tr>';
+	echo '<th style="text-align:left;">Total utdelning för ditt innehav</th>';
+	echo '<td><input type="radio" name="dividendCalc" id="perinnehav" size="8" value="perinnehav"/></td>';
+	echo '</tr>';
+	echo '<tr>';
+	echo '<th style="text-align:left;">Utdelning per aktie</th>';
+	echo '<td><input type="radio" name="dividendCalc"  id="perenhet" size="8" value="perenhet"/></td>';
+	echo '</tr>';
+	echo '<tr>';
+	echo '<th style="text-align:left;">Fast utdelning oavsett innehav (går ej att välja än)</th>';
+	echo '<td></td>';
+	echo '</tr>';
+	echo '<tr>';
+	echo '<th></th>';
+	echo '<td>';
+	echo '<input type="hidden" value="Lägg till" id="close" name="stockDividendAdd"/>';
+	echo '<input type="submit" value="Lägg till" id="close" name="stockDividendAdd" class="buttondividend"/></td>';
+	echo '</tr>';
+	echo '</table>';
+	echo '</form>';
+	echo '<div id="form_info"></div>';
+	echo '<div id="form_error"></div>';
 } else if(isset($_REQUEST['div']) && $_REQUEST['div']  == 'stockAddPrice'){
 	echo '
 	<h2>Uppdatera pris manuellt</h2>
@@ -239,5 +344,13 @@ if(isset($_REQUEST['ownAmount'])){
 		$mysqli->rollback();
 		echo '<div class="error">Ett fel inträffade</div>';
   }
+} else if(isset($_REQUEST['addDividend']) ){
+	if(stockAddDividend($_REQUEST['stockID'], $_REQUEST['date'], $_REQUEST['amount'])) {
+		$mysqli->commit();
+		echo "Lyckades";
+	} else {
+		$mysqli->rollback();
+		echo '<div class="error">Ett fel inträffade</div>';
+	}
 }
 ?>

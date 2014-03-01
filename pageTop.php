@@ -38,31 +38,68 @@ if($_SESSION['admin']){
 if(isset($_SESSION['userID']) && $_SESSION['userID'] == true) {
 	echo '     <li><a href="index.php?loggaut=true"><img src="./img/signout.png" height="32" width="32" border="0" alt="Logga ut"/></a></li>'."\n";
 }
-echo '    </ul>'."\n";
+echo '    </ul><div class="navitem"></div>'."\n";
 echo '    <div id="menu_right">';
 if(isset($_SESSION['userID']) && $_SESSION['userID'] == true) {
 
-	$totvalue = 0;
-	$totmv = 0;
-	$d = portGetStock($STARTDATE, $TODAY, $userID);
-	foreach ($d as $key) {
-		$data = portCacheGetHoldingSum($TODAY, $key, $userID);
-		$totvalue += $data['utv'] + $data['diravk'];
-		$totmv  += $data['tmValue'];
-	}
 
-	$totvalue2 = 0;
-	$d = portGetStock($STARTDATE, $YESTERDAY, $userID);
-	foreach ($d as $key) {
-		$data = portCacheGetHoldingSum($YESTERDAY, $key, $userID);
-		$totvalue2 += $data['utv'] + $data['diravk'];
+	### From years start
+	$defaultstartPort = portGetStockSummary($DEFAULTSTART, $TODAY, $stockList, $userID);
+	$sum = array(
+		"mvalue" => "0",
+		"avalue" => "0",
+		"tprice" => "0",
+		"utvkr" => "0",
+		"diravkkr" => "0",
+		"diravk" => "0",
+		"rea" => "0"
+	);
+	  
+	foreach ($defaultstartPort as $fromyear) {
+	      $sum['mvalue'] += $fromyear['mvalue'];
+	      $sum['avalue'] += $fromyear['aprice'] * $fromyear['q'];
+	      $sum['utvkr']  += $fromyear['utvkr'] ;
+	      $sum['tprice']  += $fromyear['tprice'] ;
+	      $sum['diravkkr']  += $fromyear['diravkkr'] ;
+	      $sum['rea']  += $fromyear['rea'] ;
 	}
-	if((((($totmv + $totvalue - $totvalue2) / $totmv) - 1) * 100) > 0 ) 
-		$img = 'arrowup.png';
+	$defaultstartPercent = ((($sum['mvalue'] + $sum['rea'] + $sum['diravkkr']) / $sum['tprice']) - 1) * 100;
+	
+	if($defaultstartPercent > 0) 
+		$defaultstartImg = 'arrowup.png';
 	else
-		$img = 'arrowdown.png';
+		$defaultstartImg = 'arrowdown.png';
+	
+	### From yesterday
+	$yesterdayPort = portGetStockSummary($YESTERDAY, $TODAY, $stockPapers, $userID);
+	$sum = array(
+		"mvalue" => "0",
+		"avalue" => "0",
+		"tprice" => "0",
+		"utvkr" => "0",
+		"diravkkr" => "0",
+		"diravk" => "0",
+		"rea" => "0"
+	);
+	  
+	foreach ($yesterdayPort as $fromyear) {
+	      $sum['mvalue'] += $fromyear['mvalue'];
+	      $sum['avalue'] += $fromyear['aprice'] * $fromyear['q'];
+	      $sum['utvkr']  += $fromyear['utvkr'] ;
+	      $sum['tprice']  += $fromyear['tprice'] ;
+	      $sum['diravkkr']  += $fromyear['diravkkr'] ;
+	      $sum['rea']  += $fromyear['rea'] ;
+	}
+	$yesterdayPercent = ((($sum['mvalue'] + $sum['rea'] + $sum['diravkkr']) / $sum['tprice']) - 1) * 100;
+	
+	if($yesterdayPercent > 0) 
+		$yesterdayImg = 'arrowup.png';
+	else
+		$yesterdayImg = 'arrowdown.png';
+		
 
-	echo '<div style="font-size: 0.9em; padding:3px; margin:0; display:inline-block">Idag:<img src="img/'.$img.'"> '.number_format(@(((($totmv + $totvalue - $totvalue2) / $totmv) - 1) * 100), 2, ',', ' ').'%</div>'."\n";
+	echo '<div style="font-size: 0.7em; padding:0px; margin:0; display:inline-block"><a href="?from='.$DEFAULTSTART.'&to='.$TODAY.'">I ÅR:<br><img src="img/'.$defaultstartImg.'"> '.number_format($defaultstartPercent, 2, ',', ' ').'%</a></div>'."\n";
+	echo '<div style="font-size: 0.7em; padding:0px; margin:0; display:inline-block"><a href="?from='.$YESTERDAY.'&to='.$TODAY.'">I DAG:<br><img src="img/'.$yesterdayImg.'"> '.number_format($yesterdayPercent, 2, ',', ' ').'%</a></div>'."\n";
 }
 ### Check for new messages
 if(rssIsUnread()) 

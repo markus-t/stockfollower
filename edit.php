@@ -95,6 +95,7 @@ if($stockID) {
 	  <input type="checkbox" name="AVA" value="Bike" checked="checked" class="radio"/>Avanza<br />
 	  <input type="checkbox" name="MS" value="Bike" checked="checked" />Morningstar<br />
 	  <input type="checkbox" name="NN" value="Bike" checked="checked" />Nordnet<br />
+	  <input type="checkbox" name="BS" value="Bike" checked="checked" />Bitstamp<br /><br />
 	  <input type="checkbox" name="OI" value="Bike" checked="checked" />OMX INDEX<br /><br />
 	  <input type="checkbox" name="sumD" value="Bike" checked="checked" />Summering Utdelning<br />
 	  Från datum<input type="text" name="dateFrom" value="<?php echo $fromTime ?>" /><br />
@@ -154,6 +155,17 @@ if($stockID) {
 	  echo "NASDAQ:";
 	  sysFlush_page();
 	  if(updateNasdaq($TODAY, '2013-01-01'))
+		echo "<span style=\"color: green\"> OK</span>";
+	  else 
+		echo "<span style=\"color: red\"> EJ OK</span>";
+	  echo '<br />';
+	}
+	
+	if(isset($_POST['BS'])) {
+	  ###Takes fetch from Database.
+	  echo " BITSTAMP:";
+	  sysFlush_page();
+	  if(updateBitstamp())
 		echo "<span style=\"color: green\"> OK</span>";
 	  else 
 		echo "<span style=\"color: red\"> EJ OK</span>";

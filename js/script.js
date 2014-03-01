@@ -125,6 +125,26 @@ function iniBut() {
     return false;
 	});
 	
+  $(document).on("click", ".buttondividend", function(){
+		form_data = $("#form_process").serialize();
+		$('#m_content').html('D2etta kommer ta tid...<br><br><img src="img/load1.gif" alt="LOADING" />');
+		$.ajax({
+		  type: "POST",
+		  url: "ajax.php",
+		  data: form_data,
+		  success: function(response) {
+			$('#m_content').html("<div id='message'></div>");
+			$('#message').html(response)
+			.hide()
+			.fadeIn(300, function() {
+			  $('#message').append(" ");
+			});
+			}
+     });
+	 
+    return false;
+	});
+	
 	$(document).on("click", "#removeActivity", function(){
 		$('#form_info').html('<img src="img/load1.gif" alt="LOADING" />');
 		$.ajax({
